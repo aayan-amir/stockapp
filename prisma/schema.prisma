@@ -45,6 +45,7 @@ model Stock {
   typeId               Int?
   ourNo                String?
   oemNo                String?
+  name                 String?
   stockType            String?
   description          String?
   supplier             String?

@@ -6,10 +6,11 @@ import ConfirmDialog from '@/components/ConfirmDialog'
 import EmptyState from '@/components/EmptyState'
 import { fmt, fmtDate } from '@/lib/utils'
 
-const EMPTY = { typeId:'', ourNo:'', oemNo:'', stockType:'', description:'', supplier:'', foreignCurrency:'PKR', foreignCurrencyPrice:'' }
+const EMPTY = { typeId:'', ourNo:'', oemNo:'', name:'', stockType:'', description:'', supplier:'', foreignCurrency:'PKR', foreignCurrencyPrice:'' }
 const SEARCH_FIELDS = [
   { value: 'ourNo',       label: 'Our No' },
   { value: 'oemNo',       label: 'OEM No' },
+  { value: 'name',        label: 'Name' },
   { value: 'description', label: 'Description' },
   { value: 'stockType',   label: 'Category' },
   { value: 'supplier',    label: 'Supplier' },
@@ -41,7 +42,7 @@ export default function StockPage() {
   }, [])
 
   function openNew()     { setEditing(null); setForm(EMPTY); setModal(true) }
-  function openEdit(row) { setEditing(row); setForm({ typeId: row.typeId||'', ourNo: row.ourNo||'', oemNo: row.oemNo||'', stockType: row.stockType||'', description: row.description||'', supplier: row.supplier||'', foreignCurrency: row.foreignCurrency||'PKR', foreignCurrencyPrice: row.foreignCurrencyPrice||'' }); setModal(true) }
+  function openEdit(row) { setEditing(row); setForm({ typeId: row.typeId||'', ourNo: row.ourNo||'', oemNo: row.oemNo||'', name: row.name||'', stockType: row.stockType||'', description: row.description||'', supplier: row.supplier||'', foreignCurrency: row.foreignCurrency||'PKR', foreignCurrencyPrice: row.foreignCurrencyPrice||'' }); setModal(true) }
 
   async function handleSave() {
     if (!form.ourNo && !form.description) return alert('Enter at least Our No or Description')
@@ -92,20 +93,21 @@ export default function StockPage() {
           <table className="data-table">
             <thead>
               <tr>
-                <th>Our No</th><th>OEM No</th><th>Category</th><th>Description</th>
+                <th>Our No</th><th>OEM No</th><th>Name</th><th>Category</th><th>Description</th>
                 <th>Supplier</th><th className="text-right">In</th><th className="text-right">Out</th>
                 <th className="text-right">Qty</th><th>Price FCY</th><th>Updated</th><th></th>
               </tr>
             </thead>
             <tbody>
-              {loading && <tr><td colSpan={11} className="text-center text-white/20 py-10">Loading…</td></tr>}
+              {loading && <tr><td colSpan={12} className="text-center text-white/20 py-10">Loading…</td></tr>}
               {!loading && rows.length === 0 && (
-                <tr><td colSpan={11}><EmptyState icon="▦" title="No stock items" message="Add a new item to get started" action={<button onClick={openNew} className="btn-gold btn-sm">+ New Item</button>} /></td></tr>
+                <tr><td colSpan={12}><EmptyState icon="▦" title="No stock items" message="Add a new item to get started" action={<button onClick={openNew} className="btn-gold btn-sm">+ New Item</button>} /></td></tr>
               )}
               {rows.map(row => (
                 <tr key={row.stockId}>
                   <td className="font-mono text-accent/80 text-xs">{row.ourNo || '—'}</td>
                   <td className="text-xs text-white/50">{row.oemNo || '—'}</td>
+                  <td className="max-w-[140px] truncate">{row.name || '—'}</td>
                   <td><span className="badge bg-navy-300 text-accent/70">{row.stockType || '—'}</span></td>
                   <td className="max-w-[180px] truncate">{row.description || '—'}</td>
                   <td className="text-white/50 text-xs">{row.supplier || '—'}</td>
@@ -136,6 +138,7 @@ export default function StockPage() {
         <div className="grid grid-cols-2 gap-4">
           <div><label className="field-label">Our No</label><input {...inp('ourNo')} placeholder="e.g. ENG-001" /></div>
           <div><label className="field-label">OEM No</label><input {...inp('oemNo')} placeholder="Original part no." /></div>
+          <div className="col-span-2"><label className="field-label">Name</label><input {...inp('name')} placeholder="Product name" /></div>
           <div className="col-span-2"><label className="field-label">Description</label><input {...inp('description')} placeholder="Product description" /></div>
           <div>
             <label className="field-label">Category</label>
