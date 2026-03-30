@@ -17,9 +17,9 @@ export default function Modal({ open, onClose, title, children, wide }) {
       onClick={e => e.target === e.currentTarget && onClose()}
     >
       <div className={`card w-full ${wide ? 'max-w-3xl' : 'max-w-lg'} max-h-[90vh] overflow-y-auto`}>
-        <div className="flex items-center justify-between p-5 border-b border-white/10">
+        <div className="flex items-center justify-between p-5 border-b border-slate-200">
           <h2 className="text-gold font-bold text-lg">{title}</h2>
-          <button onClick={onClose} className="text-white/30 hover:text-white text-xl leading-none">×</button>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 text-xl leading-none">×</button>
         </div>
         <div className="p-5">{children}</div>
       </div>
