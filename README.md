@@ -26,29 +26,31 @@ A full-stack inventory, purchases, and sales management web app built with **Nex
 ## Quick Start
 
 ```bash
-# 1. Install dependencies
-npm install
-
-# 2. Push schema to SQLite and seed reference data
+# 1. Run setup (auto-creates .env, installs deps, migrates DB, seeds data)
 npm run setup
 
-# 3. Start dev server
+# 2. Start dev server
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). Default PIN: **1234** (change in `.env.local`).
+Open [http://localhost:3000](http://localhost:3000). Default PIN: **1234** (change in `.env`).
 
 ## Environment Variables
 
-Create a `.env.local` file in the root:
+`npm run setup` automatically copies `.env.example` to `.env` on first run. You can edit `.env` to customise values:
 
 ```env
 # Login PIN (default: 1234)
 ACCESS_PIN=1234
 
 # Next Auth secret (generate with: openssl rand -base64 32)
-NEXTAUTH_SECRET=change-me
+NEXTAUTH_SECRET=replace-with-a-long-random-string
+
+# Database (SQLite — path relative to prisma/)
+DATABASE_URL="file:./stock.db"
 ```
+
+> **Note:** Prisma requires `DATABASE_URL` to be present in `.env` (not `.env.local`). If you ever delete `.env`, copy `.env.example` back to `.env` before running Prisma commands.
 
 ## Project Structure
 
