@@ -3,17 +3,19 @@ import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 
 export async function GET(_, { params }) {
+  const { id } = await params
   const s = await prisma.stock.findUnique({
-    where: { stockId: Number(params.id) }, include: { productType: true },
+    where: { stockId: Number(id) }, include: { productType: true },
   })
   if (!s) return NextResponse.json({ error: 'Not found' }, { status: 404 })
   return NextResponse.json(s)
 }
 
 export async function PUT(req, { params }) {
+  const { id } = await params
   const b = await req.json()
   const s = await prisma.stock.update({
-    where: { stockId: Number(params.id) },
+    where: { stockId: Number(id) },
     data: {
       typeId:               b.typeId  ? Number(b.typeId)  : null,
       ourNo:                b.ourNo   || null,
@@ -30,6 +32,7 @@ export async function PUT(req, { params }) {
 }
 
 export async function DELETE(_, { params }) {
-  await prisma.stock.delete({ where: { stockId: Number(params.id) } })
+  const { id } = await params
+  await prisma.stock.delete({ where: { stockId: Number(id) } })
   return NextResponse.json({ ok: true })
 }
