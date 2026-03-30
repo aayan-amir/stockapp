@@ -43,7 +43,6 @@ export default function LedgerPage() {
 
   const totalSales     = rows.filter(r => r.transactionType === 'Sale').reduce((s, r) => s + (r.totalPKR || 0), 0)
   const totalPurchases = rows.filter(r => r.transactionType === 'Purchase').reduce((s, r) => s + (r.totalPKR || 0), 0)
-  const netPosition    = totalSales - totalPurchases
 
   return (
     <div>
@@ -74,7 +73,7 @@ export default function LedgerPage() {
       </div>
 
       {/* Summary KPIs */}
-      <div className="grid grid-cols-3 gap-4 mb-5">
+      <div className="grid grid-cols-2 gap-4 mb-5">
         <div className="stat-card">
           <div className="stat-value text-success">₨ {fmt(totalSales)}</div>
           <div className="stat-label">Total Sales</div>
@@ -84,11 +83,6 @@ export default function LedgerPage() {
           <div className="stat-value text-warn">₨ {fmt(totalPurchases)}</div>
           <div className="stat-label">Total Purchases</div>
           <div className="text-white/20 text-xs mt-1">{rows.filter(r => r.transactionType === 'Purchase').length} transaction(s)</div>
-        </div>
-        <div className="stat-card">
-          <div className={`stat-value ${netPosition >= 0 ? 'text-success' : 'text-danger'}`}>₨ {fmt(Math.abs(netPosition))}</div>
-          <div className="stat-label">Net {netPosition >= 0 ? 'Surplus' : 'Deficit'}</div>
-          <div className="text-white/20 text-xs mt-1">{rows.length} record(s) shown</div>
         </div>
       </div>
 

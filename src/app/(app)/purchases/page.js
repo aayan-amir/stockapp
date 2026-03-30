@@ -176,8 +176,8 @@ export default function PurchasesPage() {
 
           {/* Totals summary */}
           <div className="col-span-2 bg-navy-200 rounded-xl p-4 grid grid-cols-3 gap-4 text-center mt-2">
-            <div><div className="text-white/50 font-mono text-sm">₨ {fmt(totals.sub)}</div><div className="text-accent/50 text-xs mt-0.5">Subtotal</div></div>
-            <div><div className="text-white/50 font-mono text-sm">₨ {fmt(totals.tax)}</div><div className="text-accent/50 text-xs mt-0.5">Tax</div></div>
+            <div><div className="text-white/50 font-mono text-sm">{form.currencyCode} {fmt(Number(form.quantity) * Number(form.unitPriceFCY))}</div><div className="text-accent/50 text-xs mt-0.5">Subtotal (FCY)</div></div>
+            <div><div className="text-white/50 font-mono text-sm">₨ {fmt(totals.tax)}</div><div className="text-accent/50 text-xs mt-0.5">Tax (PKR)</div></div>
             <div><div className="text-gold font-mono font-bold text-lg">₨ {fmt(totals.total)}</div><div className="text-accent/50 text-xs mt-0.5">TOTAL PKR</div></div>
           </div>
         </div>

@@ -8,6 +8,7 @@ import { fmt, fmtDate, calcTotal, today } from '@/lib/utils'
 const EMPTY = {
   invoiceNo:'', txDate: today(), customerId:'', notes:'',
   stockId:'', quantity:'', taxRateUsed:'18', freightPKR:'', otherChargesPKR:'',
+  exchangeRateUsed:'1',
 }
 
 export default function SalesPage() {
@@ -20,6 +21,7 @@ export default function SalesPage() {
   const [stocks,     setStocks]    = useState([])
   const [customers,  setCustomers] = useState([])
   const [taxRates,   setTaxRates]  = useState([])
+  const [currencies, setCurrencies] = useState([])
   const [selStock,   setSelStock]  = useState(null)   // full stock record
   const [q,          setQ]         = useState('')
   const [delTarget,  setDelTarget] = useState(null)
@@ -35,6 +37,7 @@ export default function SalesPage() {
     fetch('/api/stock').then(r => r.json()).then(d => setStocks(d.filter(s => s.quantity > 0)))
     fetch('/api/customers').then(r => r.json()).then(setCustomers)
     fetch('/api/taxrates').then(r => r.json()).then(setTaxRates)
+    fetch('/api/currencies').then(r => r.json()).then(setCurrencies)
   }, [])
 
   const f = k => ({ value: form[k] ?? '', onChange: e => setForm(p => ({ ...p, [k]: e.target.value })), className: 'field-input' })
@@ -42,14 +45,19 @@ export default function SalesPage() {
   function pickStock(id) {
     const s = stocks.find(s => s.stockId === Number(id))
     setSelStock(s || null)
-    setForm(p => ({ ...p, stockId: id }))
+    if (s) {
+      const cur  = s.foreignCurrency || 'PKR'
+      const rate = currencies.find(c => c.currencyCode === cur)
+      setForm(p => ({ ...p, stockId: id, exchangeRateUsed: rate ? String(rate.exchangeRateToPKR) : '1' }))
+    } else {
+      setForm(p => ({ ...p, stockId: id, exchangeRateUsed: '1' }))
+    }
   }
 
-  const exRate = selStock ? (selStock.foreignCurrency === 'PKR' ? 1 : 1) : 1  // resolved via currency table on backend
   const totals = calcTotal({
     qty:     Number(form.quantity),
     unitFCY: selStock?.foreignCurrencyPrice || 0,
-    exRate:  1,   // backend resolves; show PKR estimate using stored price
+    exRate:  Number(form.exchangeRateUsed) || 1,
     taxRate: Number(form.taxRateUsed),
     freight: Number(form.freightPKR),
     other:   Number(form.otherChargesPKR),
@@ -74,7 +82,7 @@ export default function SalesPage() {
       ...form,
       unitPriceFCY:     selStock.foreignCurrencyPrice || 0,
       currencyCode:     selStock.foreignCurrency || 'PKR',
-      exchangeRateUsed: 1,
+      exchangeRateUsed: Number(form.exchangeRateUsed) || 1,
       totalPKR:         totals.total,
     }
     const res = await fetch('/api/sales', {
@@ -190,8 +198,8 @@ export default function SalesPage() {
 
           {/* Total breakdown */}
           <div className="col-span-2 bg-navy-200 rounded-xl p-4 grid grid-cols-3 gap-4 text-center mt-1">
-            <div><div className="text-white/50 font-mono text-sm">₨ {fmt(totals.sub)}</div><div className="text-accent/50 text-xs mt-0.5">Subtotal</div></div>
-            <div><div className="text-white/50 font-mono text-sm">₨ {fmt(totals.tax)}</div><div className="text-accent/50 text-xs mt-0.5">Tax</div></div>
+            <div><div className="text-white/50 font-mono text-sm">{selStock?.foreignCurrency || 'PKR'} {fmt((selStock?.foreignCurrencyPrice || 0) * Number(form.quantity))}</div><div className="text-accent/50 text-xs mt-0.5">Subtotal (FCY)</div></div>
+            <div><div className="text-white/50 font-mono text-sm">₨ {fmt(totals.tax)}</div><div className="text-accent/50 text-xs mt-0.5">Tax (PKR)</div></div>
             <div><div className="text-gold font-mono font-bold text-lg">₨ {fmt(totals.total)}</div><div className="text-accent/50 text-xs mt-0.5">TOTAL PKR</div></div>
           </div>
         </div>
