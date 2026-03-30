@@ -1,0 +1,44 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* { box-sizing: border-box; }
+body { background: #0a1228; color: #e8eef8; font-family: 'DM Sans', sans-serif; }
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: #0d1835; }
+::-webkit-scrollbar-thumb { background: #243a72; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #2d4a8a; }
+
+.field-input {
+  @apply w-full bg-navy-200 border border-accent/20 text-blue-100 rounded-lg px-3 py-2 text-sm
+         focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30
+         placeholder-blue-900/40 transition-colors disabled:bg-navy-100
+         disabled:text-blue-300/40 disabled:border-white/10 disabled:cursor-not-allowed;
+}
+.field-label { @apply block text-accent/80 text-xs font-semibold mb-1 tracking-widest uppercase; }
+
+.btn        { @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed; }
+.btn-gold   { @apply btn bg-gold text-navy-DEFAULT hover:bg-gold-light; }
+.btn-ghost  { @apply btn bg-navy-300 text-accent border border-accent/30 hover:bg-navy-400 hover:border-accent/60; }
+.btn-danger { @apply btn bg-danger/80 text-white hover:bg-danger; }
+.btn-sm     { @apply text-xs px-3 py-1.5; }
+
+.card { @apply bg-navy-100 border border-white/5 rounded-xl; }
+
+.data-table { @apply w-full text-sm; }
+.data-table thead th { @apply text-accent/70 text-xs font-semibold py-3 px-3 text-left uppercase tracking-wider border-b border-white/10 whitespace-nowrap; }
+.data-table tbody tr { @apply border-b border-white/5 hover:bg-white/[0.03] transition-colors; }
+.data-table tbody td { @apply py-3 px-3 text-blue-100/90; }
+.data-table tbody tr:last-child { @apply border-0; }
+
+.badge { @apply inline-block text-xs font-bold px-2 py-0.5 rounded-full; }
+.badge-sale     { @apply badge bg-success/15 text-success; }
+.badge-purchase { @apply badge bg-gold/15 text-gold; }
+.badge-low      { @apply badge bg-danger/15 text-danger; }
+.badge-ok       { @apply badge bg-success/15 text-success; }
+
+.stat-card  { @apply bg-navy-200 rounded-xl p-5 border border-white/5; }
+.stat-value { @apply text-2xl font-bold text-gold font-mono tabular-nums; }
+.stat-label { @apply text-accent/60 text-xs font-semibold uppercase tracking-widest mt-1; }

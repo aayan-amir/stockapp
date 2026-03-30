@@ -1,0 +1,129 @@
+'use client'
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
+import { fmt, fmtDate } from '@/lib/utils'
+
+function StatCard({ label, value, sub, color = 'text-gold' }) {
+  return (
+    <div className="stat-card">
+      <div className={`text-2xl font-bold font-mono tabular-nums ${color}`}>{value}</div>
+      <div className="text-accent/50 text-xs font-semibold uppercase tracking-widest mt-1">{label}</div>
+      {sub && <div className="text-white/30 text-xs mt-1">{sub}</div>}
+    </div>
+  )
+}
+
+export default function Dashboard() {
+  const [data, setData]     = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch('/api/dashboard').then(r => r.json()).then(d => { setData(d); setLoading(false) })
+  }, [])
+
+  if (loading) return (
+    <div className="flex items-center justify-center h-64 text-accent/30 text-sm gap-2">
+      <span className="animate-spin">◌</span> Loading dashboard…
+    </div>
+  )
+
+  const { totalStockItems, totalStockQty, lowStockItems,
+          monthSalesPKR, monthSalesCount, monthPurchasesPKR, monthPurchasesCount,
+          recentTx, topProducts } = data
+
+  return (
+    <div>
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-gold">Dashboard</h1>
+        <p className="text-accent/40 text-xs font-mono uppercase tracking-widest mt-0.5">
+          {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+        </p>
+      </div>
+
+      {/* KPI row */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <StatCard label="Stock Items"      value={totalStockItems}           sub={`${totalStockQty} total units`} />
+        <StatCard label="Low Stock Alerts" value={lowStockItems}             color={lowStockItems > 0 ? 'text-danger' : 'text-success'} sub="≤ 5 units remaining" />
+        <StatCard label="Sales This Month" value={`₨ ${fmt(monthSalesPKR)}`} color="text-success" sub={`${monthSalesCount} invoice(s)`} />
+        <StatCard label="Purchases This Month" value={`₨ ${fmt(monthPurchasesPKR)}`} color="text-warn" sub={`${monthPurchasesCount} order(s)`} />
+      </div>
+
+      <div className="grid lg:grid-cols-3 gap-6">
+        {/* Recent transactions */}
+        <div className="lg:col-span-2 card overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
+            <h2 className="font-semibold text-white/80 text-sm">Recent Transactions</h2>
+            <Link href="/ledger" className="text-accent/50 text-xs hover:text-accent transition-colors">View all →</Link>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Invoice</th><th>Type</th><th>Product</th><th>Party</th><th>Date</th><th className="text-right">Total PKR</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentTx.length === 0 && (
+                  <tr><td colSpan={6} className="text-center text-white/20 py-8">No transactions yet</td></tr>
+                )}
+                {recentTx.map(tx => (
+                  <tr key={tx.saleId}>
+                    <td className="font-mono text-xs text-accent/70">{tx.invoiceNo || '—'}</td>
+                    <td><span className={tx.transactionType === 'Sale' ? 'badge-sale' : 'badge-purchase'}>{tx.transactionType}</span></td>
+                    <td className="max-w-[140px] truncate">{tx.stock?.ourNo || '—'} {tx.stock?.description ? `· ${tx.stock.description}` : ''}</td>
+                    <td className="text-white/50 text-xs">{tx.transactionType === 'Sale' ? (tx.customer?.customerName || 'Walk-in') : (tx.supplierName || '—')}</td>
+                    <td className="text-white/40 text-xs whitespace-nowrap">{fmtDate(tx.txDate)}</td>
+                    <td className="text-right font-mono text-xs">₨ {fmt(tx.totalPKR)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Top selling products */}
+        <div className="card overflow-hidden">
+          <div className="px-5 py-4 border-b border-white/10">
+            <h2 className="font-semibold text-white/80 text-sm">Top Selling Products</h2>
+          </div>
+          <div className="p-4 space-y-3">
+            {topProducts.length === 0 && <p className="text-white/20 text-sm text-center py-6">No sales yet</p>}
+            {topProducts.map((t, i) => (
+              <div key={t.stockId} className="flex items-center gap-3">
+                <span className="text-white/20 font-mono text-xs w-4">{i + 1}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm text-white/80 truncate">{t.stock?.ourNo || '—'}</div>
+                  <div className="text-xs text-white/30 truncate">{t.stock?.description}</div>
+                </div>
+                <div className="text-right shrink-0">
+                  <div className="text-xs font-mono text-gold">₨ {fmt(t._sum.totalPKR)}</div>
+                  <div className="text-xs text-white/30">{t._sum.quantity} sold</div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="px-5 pb-4 pt-2 border-t border-white/5">
+            <Link href="/sales" className="text-accent/40 text-xs hover:text-accent transition-colors">All sales →</Link>
+          </div>
+        </div>
+      </div>
+
+      {/* Quick actions */}
+      <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {[
+          { href: '/purchases', label: 'Record Purchase', icon: '↓', color: 'border-gold/20 hover:border-gold/50' },
+          { href: '/sales',     label: 'Record Sale',     icon: '↑', color: 'border-success/20 hover:border-success/50' },
+          { href: '/stock',     label: 'Browse Stock',    icon: '▦', color: 'border-accent/20 hover:border-accent/50' },
+          { href: '/customers', label: 'Customers',       icon: '◎', color: 'border-white/10 hover:border-white/30' },
+        ].map(a => (
+          <Link key={a.href} href={a.href}
+            className={`flex items-center gap-3 p-4 rounded-xl bg-navy-200 border transition-colors ${a.color}`}>
+            <span className="text-2xl text-white/30">{a.icon}</span>
+            <span className="text-sm font-semibold text-white/60">{a.label}</span>
+          </Link>
+        ))}
+      </div>
+    </div>
+  )
+}

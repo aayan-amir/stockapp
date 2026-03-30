@@ -1,0 +1,80 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model ProductType {
+  typeId   Int     @id @default(autoincrement())
+  typeName String
+  stocks   Stock[]
+}
+
+model Rate {
+  rateId            Int      @id @default(autoincrement())
+  currencyCode      String   @unique
+  currencyName      String
+  exchangeRateToPKR Float
+  lastUpdated       DateTime @default(now()) @updatedAt
+}
+
+model TaxRate {
+  taxRateId      Int      @id @default(autoincrement())
+  taxName        String
+  taxRatePercent Float
+  description    String?
+  lastUpdated    DateTime @default(now()) @updatedAt
+}
+
+model Customer {
+  customerId   Int     @id @default(autoincrement())
+  customerName String
+  address      String?
+  phoneNumber  String?
+  email        String?
+  filerStatus  String?
+  notes        String?
+  sales        Sale[]
+}
+
+model Stock {
+  stockId              Int          @id @default(autoincrement())
+  typeId               Int?
+  ourNo                String?
+  oemNo                String?
+  stockType            String?
+  description          String?
+  supplier             String?
+  foreignCurrency      String?
+  foreignCurrencyPrice Float?
+  quantity             Int          @default(0)
+  stockIn              Int          @default(0)
+  stockOut             Int          @default(0)
+  lastUpdated          DateTime     @default(now()) @updatedAt
+  productType          ProductType? @relation(fields: [typeId], references: [typeId])
+  transactions         Sale[]
+}
+
+model Sale {
+  saleId           Int       @id @default(autoincrement())
+  invoiceNo        String?
+  transactionType  String
+  txDate           DateTime  @default(now())
+  stockId          Int?
+  customerId       Int?
+  supplierName     String?
+  quantity         Int       @default(0)
+  unitPriceFCY     Float     @default(0)
+  currencyCode     String    @default("PKR")
+  exchangeRateUsed Float     @default(1)
+  taxRateUsed      Float     @default(0)
+  freightPKR       Float     @default(0)
+  otherChargesPKR  Float     @default(0)
+  totalPKR         Float     @default(0)
+  notes            String?
+  stock            Stock?    @relation(fields: [stockId], references: [stockId])
+  customer         Customer? @relation(fields: [customerId], references: [customerId])
+}
