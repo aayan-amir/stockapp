@@ -1,8 +1,8 @@
 'use client'
 import { useEffect, useState, useCallback } from 'react'
-import PageHeader from '@/components/PageHeader'
-import Modal from '@/components/Modal'
-import ConfirmDialog from '@/components/ConfirmDialog'
+import PageHeader from '@/components/ui/PageHeader'
+import Modal from '@/components/ui/Modal'
+import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import { fmt, fmtDate, calcTotal, today } from '@/lib/utils'
 
 const EMPTY = {

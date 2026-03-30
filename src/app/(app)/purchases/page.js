@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState, useCallback } from 'react'
-import PageHeader from '@/components/PageHeader'
-import Modal from '@/components/Modal'
+import PageHeader from '@/components/ui/PageHeader'
+import Modal from '@/components/ui/Modal'
 import { fmt, fmtDate, calcTotal, today } from '@/lib/utils'
 
 const EMPTY_FORM = {

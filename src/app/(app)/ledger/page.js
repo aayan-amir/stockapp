@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState, useCallback } from 'react'
-import PageHeader from '@/components/PageHeader'
+import PageHeader from '@/components/ui/PageHeader'
 import { fmt, fmtDate } from '@/lib/utils'
 
 export default function LedgerPage() {
