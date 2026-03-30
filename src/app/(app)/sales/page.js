@@ -34,7 +34,7 @@ export default function SalesPage() {
   useEffect(() => {
     fetch('/api/stock').then(r => r.json()).then(d => setStocks(d.filter(s => s.quantity > 0)))
     fetch('/api/customers').then(r => r.json()).then(setCustomers)
-    fetch('/api/taxrates').then(r => r.json()).then(setTaxRates)
+    fetch('/api/tax-rates').then(r => r.json()).then(setTaxRates)
   }, [])
 
   const f = k => ({ value: form[k] ?? '', onChange: e => setForm(p => ({ ...p, [k]: e.target.value })), className: 'field-input' })

@@ -90,7 +90,7 @@ function TaxRatesSection() {
   const [saving,  setSaving] = useState(false)
   const [del,     setDel]    = useState(null)
 
-  const load = () => fetch('/api/taxrates').then(r => r.json()).then(setRows)
+  const load = () => fetch('/api/tax-rates').then(r => r.json()).then(setRows)
   useEffect(() => { load() }, [])
 
   function openNew()   { setEditing(null); setForm({ taxName:'', taxRatePercent:'', description:'' }); setModal(true) }
@@ -98,7 +98,7 @@ function TaxRatesSection() {
 
   async function save() {
     setSaving(true)
-    const url    = editing ? `/api/taxrates/${editing.taxRateId}` : '/api/taxrates'
+    const url    = editing ? `/api/tax-rates/${editing.taxRateId}` : '/api/tax-rates'
     const method = editing ? 'PUT' : 'POST'
     await fetch(url, { method, headers: { 'Content-Type':'application/json' }, body: JSON.stringify(form) })
     setSaving(false); setModal(false); load()
@@ -141,7 +141,7 @@ function TaxRatesSection() {
       </Modal>
 
       <ConfirmDialog open={!!del} onClose={() => setDel(null)} danger
-        onConfirm={async () => { await fetch(`/api/taxrates/${del.taxRateId}`, { method:'DELETE' }); setDel(null); load() }}
+        onConfirm={async () => { await fetch(`/api/tax-rates/${del.taxRateId}`, { method:'DELETE' }); setDel(null); load() }}
         title="Delete Tax Rate" message={`Delete "${del?.taxName}"?`} />
     </SettingSection>
   )

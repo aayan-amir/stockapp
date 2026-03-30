@@ -32,7 +32,7 @@ export default function PurchasesPage() {
   useEffect(() => {
     fetch('/api/stock').then(r => r.json()).then(setStocks)
     fetch('/api/currencies').then(r => r.json()).then(setCurrencies)
-    fetch('/api/taxrates').then(r => r.json()).then(setTaxRates)
+    fetch('/api/tax-rates').then(r => r.json()).then(setTaxRates)
   }, [])
 
   function f(k) { return { value: form[k] ?? '', onChange: e => setForm(p => ({ ...p, [k]: e.target.value })), className: 'field-input' } }
