@@ -6,7 +6,7 @@ import ConfirmDialog from '@/components/ConfirmDialog'
 import EmptyState from '@/components/EmptyState'
 import { fmt, fmtDate } from '@/lib/utils'
 
-const EMPTY = { ourNo:'', oemNo:'', stockType:'', description:'', supplier:'', foreignCurrency:'PKR', foreignCurrencyPrice:'' }
+const EMPTY = { typeId:'', ourNo:'', oemNo:'', stockType:'', description:'', supplier:'', foreignCurrency:'PKR', foreignCurrencyPrice:'' }
 const SEARCH_FIELDS = [
   { value: 'ourNo',       label: 'Our No' },
   { value: 'oemNo',       label: 'OEM No' },
@@ -41,7 +41,7 @@ export default function StockPage() {
   }, [])
 
   function openNew()     { setEditing(null); setForm(EMPTY); setModal(true) }
-  function openEdit(row) { setEditing(row); setForm({ ourNo: row.ourNo||'', oemNo: row.oemNo||'', stockType: row.stockType||'', description: row.description||'', supplier: row.supplier||'', foreignCurrency: row.foreignCurrency||'PKR', foreignCurrencyPrice: row.foreignCurrencyPrice||'' }); setModal(true) }
+  function openEdit(row) { setEditing(row); setForm({ typeId: row.typeId||'', ourNo: row.ourNo||'', oemNo: row.oemNo||'', stockType: row.stockType||'', description: row.description||'', supplier: row.supplier||'', foreignCurrency: row.foreignCurrency||'PKR', foreignCurrencyPrice: row.foreignCurrencyPrice||'' }); setModal(true) }
 
   async function handleSave() {
     if (!form.ourNo && !form.description) return alert('Enter at least Our No or Description')
@@ -139,9 +139,17 @@ export default function StockPage() {
           <div className="col-span-2"><label className="field-label">Description</label><input {...inp('description')} placeholder="Product description" /></div>
           <div>
             <label className="field-label">Category</label>
-            <select {...inp('stockType')} className="field-input">
+            <select
+              value={form.typeId || ''}
+              onChange={e => {
+                const typeId = e.target.value ? Number(e.target.value) : ''
+                const selected = categories.find(c => c.typeId === typeId)
+                setForm(f => ({ ...f, typeId, stockType: selected ? selected.typeName : '' }))
+              }}
+              className="field-input"
+            >
               <option value="">— Select —</option>
-              {categories.map(c => <option key={c.typeId} value={c.typeName}>{c.typeName}</option>)}
+              {categories.map(c => <option key={c.typeId} value={c.typeId}>{c.typeName}</option>)}
             </select>
           </div>
           <div><label className="field-label">Supplier</label><input {...inp('supplier')} placeholder="Supplier name" /></div>

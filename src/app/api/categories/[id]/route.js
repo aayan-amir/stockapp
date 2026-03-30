@@ -2,11 +2,15 @@ export const dynamic = 'force-dynamic'
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 export async function PUT(req, { params }) {
+  const id = Number(params.id)
+  if (!Number.isInteger(id)) return NextResponse.json({ error: 'Invalid id' }, { status: 400 })
   const { typeName } = await req.json()
-  const row = await prisma.productType.update({ where: { typeId: Number(params.id) }, data: { typeName } })
+  const row = await prisma.productType.update({ where: { typeId: id }, data: { typeName } })
   return NextResponse.json(row)
 }
 export async function DELETE(_, { params }) {
-  await prisma.productType.delete({ where: { typeId: Number(params.id) } })
+  const id = Number(params.id)
+  if (!Number.isInteger(id)) return NextResponse.json({ error: 'Invalid id' }, { status: 400 })
+  await prisma.productType.delete({ where: { typeId: id } })
   return NextResponse.json({ ok: true })
 }
