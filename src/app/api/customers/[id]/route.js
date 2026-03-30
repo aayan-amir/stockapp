@@ -3,9 +3,10 @@ import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 
 export async function PUT(req, { params }) {
+  const { id } = await params
   const b = await req.json()
   const row = await prisma.customer.update({
-    where: { customerId: Number(params.id) },
+    where: { customerId: Number(id) },
     data: {
       customerName: b.customerName,
       address:      b.address     || null,
@@ -19,6 +20,7 @@ export async function PUT(req, { params }) {
 }
 
 export async function DELETE(_, { params }) {
-  await prisma.customer.delete({ where: { customerId: Number(params.id) } })
+  const { id } = await params
+  await prisma.customer.delete({ where: { customerId: Number(id) } })
   return NextResponse.json({ ok: true })
 }
