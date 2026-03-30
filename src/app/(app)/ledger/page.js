@@ -108,8 +108,8 @@ export default function LedgerPage() {
                   <td className="font-mono text-xs text-accent/60">{r.invoiceNo || '—'}</td>
                   <td className="text-xs text-white/40 whitespace-nowrap">{fmtDate(r.txDate)}</td>
                   <td className="max-w-[160px]">
-                    <div className="text-xs text-accent/70 truncate">{r.stock?.ourNo || '—'}</div>
-                    <div className="text-xs text-white/30 truncate">{r.stock?.description}</div>
+                    <div className="text-xs truncate">{r.stock?.name || r.stock?.description || '—'}</div>
+                    <div className="text-xs text-white/30 truncate">{r.stock?.ourNo}</div>
                   </td>
                   <td className="text-xs text-white/50">
                     {r.transactionType === 'Sale'

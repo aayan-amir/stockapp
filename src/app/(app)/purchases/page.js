@@ -105,16 +105,17 @@ export default function PurchasesPage() {
         <div className="overflow-x-auto">
           <table className="data-table">
             <thead>
-              <tr><th>Invoice</th><th>Date</th><th>Product</th><th>Supplier</th><th className="text-right">Qty</th><th>Currency</th><th className="text-right">Unit FCY</th><th className="text-right">Tax %</th><th className="text-right">Total PKR</th></tr>
+              <tr><th>Invoice</th><th>Date</th><th>Our No.</th><th>Name</th><th>Supplier</th><th className="text-right">Qty</th><th>Currency</th><th className="text-right">Unit FCY</th><th className="text-right">Tax %</th><th className="text-right">Total PKR</th></tr>
             </thead>
             <tbody>
-              {loading && <tr><td colSpan={9} className="text-center text-white/20 py-10">Loading…</td></tr>}
-              {!loading && rows.length === 0 && <tr><td colSpan={9} className="text-center text-white/20 py-10">No purchases yet</td></tr>}
+              {loading && <tr><td colSpan={10} className="text-center text-white/20 py-10">Loading…</td></tr>}
+              {!loading && rows.length === 0 && <tr><td colSpan={10} className="text-center text-white/20 py-10">No purchases yet</td></tr>}
               {rows.map(r => (
                 <tr key={r.saleId}>
                   <td className="font-mono text-xs text-accent/70">{r.invoiceNo || '—'}</td>
                   <td className="text-xs text-white/40 whitespace-nowrap">{fmtDate(r.txDate)}</td>
-                  <td>{r.stock?.ourNo || '—'} <span className="text-white/30 text-xs">{r.stock?.description}</span></td>
+                  <td className="font-mono text-xs text-white/70">{r.stock?.ourNo || '—'}</td>
+                  <td className="text-xs">{r.stock?.name || r.stock?.description || '—'}</td>
                   <td className="text-white/50 text-xs">{r.supplierName || '—'}</td>
                   <td className="text-right font-mono text-xs">{r.quantity}</td>
                   <td className="text-xs text-white/40">{r.currencyCode}</td>
