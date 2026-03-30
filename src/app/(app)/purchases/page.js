@@ -150,7 +150,7 @@ export default function PurchasesPage() {
               <option value="">— Select product —</option>
               {stocks.map(s => (
                 <option key={s.stockId} value={s.stockId}>
-                  {s.ourNo ? `${s.ourNo} · ` : ''}{s.description || 'Unnamed'} [{s.stockType || 'No cat'}] — {s.quantity} in stock
+                  {s.ourNo ? `${s.ourNo} · ` : ''}{s.name || s.description || 'Unnamed'} [{s.stockType || 'No cat'}] — {s.quantity} in stock
                 </option>
               ))}
             </select>

@@ -6,9 +6,9 @@ export async function GET(req) {
   const { searchParams } = new URL(req.url)
   const q     = searchParams.get('q') || ''
   const field = searchParams.get('field') || 'ourNo'
-  const allowedFields = ['ourNo', 'oemNo', 'description', 'stockType', 'supplier']
+  const allowedFields = ['ourNo', 'oemNo', 'name', 'description', 'stockType', 'supplier']
   const where = q && allowedFields.includes(field)
-    ? { [field]: { contains: q, mode: 'insensitive' } }
+    ? { [field]: { contains: q } }
     : {}
 
   const stocks = await prisma.stock.findMany({
@@ -24,6 +24,7 @@ export async function POST(req) {
       typeId:               b.typeId  ? Number(b.typeId)  : null,
       ourNo:                b.ourNo   || null,
       oemNo:                b.oemNo   || null,
+      name:                 b.name    || null,
       stockType:            b.stockType   || null,
       description:          b.description || null,
       supplier:             b.supplier    || null,

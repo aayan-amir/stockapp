@@ -18,6 +18,7 @@ export async function PUT(req, { params }) {
       typeId:               b.typeId  ? Number(b.typeId)  : null,
       ourNo:                b.ourNo   || null,
       oemNo:                b.oemNo   || null,
+      name:                 b.name    || null,
       stockType:            b.stockType   || null,
       description:          b.description || null,
       supplier:             b.supplier    || null,
