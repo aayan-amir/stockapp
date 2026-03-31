@@ -118,22 +118,30 @@ export default function SalesPage() {
         <div className="overflow-x-auto">
           <table className="data-table">
             <thead>
-              <tr><th>Invoice</th><th>Date</th><th>Product</th><th>Customer</th><th className="text-right">Qty</th><th className="text-right">Tax %</th><th className="text-right">Total PKR</th><th></th></tr>
+              <tr>
+                <th>Invoice</th><th>Date</th><th>Our No.</th><th>Name</th><th>Customer</th>
+                <th className="text-right">Qty</th><th>Currency</th>
+                <th className="text-right">Unit FCY</th><th className="text-right">Tax %</th>
+                <th className="text-right">Total PKR</th><th></th>
+              </tr>
             </thead>
             <tbody>
-              {loading && <tr><td colSpan={8} className="text-center text-slate-300 py-10">Loading…</td></tr>}
-              {!loading && rows.length === 0 && <tr><td colSpan={8} className="text-center text-slate-300 py-10">No sales yet</td></tr>}
+              {loading && <tr><td colSpan={11} className="text-center text-slate-500 py-10">Loading…</td></tr>}
+              {!loading && rows.length === 0 && <tr><td colSpan={11} className="text-center text-slate-500 py-10">No sales yet</td></tr>}
               {rows.map(r => (
                 <tr key={r.saleId}>
-                  <td className="font-mono text-xs text-sky-500">{r.invoiceNo || '—'}</td>
-                  <td className="text-xs text-slate-400 whitespace-nowrap">{fmtDate(r.txDate)}</td>
-                  <td>{r.stock?.ourNo || '—'} <span className="text-slate-400 text-xs">{r.stock?.description}</span></td>
-                  <td className="text-slate-500 text-xs">{r.customer?.customerName || 'Walk-in'}</td>
-                  <td className="text-right font-mono text-xs">{r.quantity}</td>
-                  <td className="text-right font-mono text-xs text-slate-400">{r.taxRateUsed}%</td>
+                  <td className="font-mono text-xs text-sky-600">{r.invoiceNo || '—'}</td>
+                  <td className="text-xs text-slate-600 whitespace-nowrap">{fmtDate(r.txDate)}</td>
+                  <td className="font-mono text-xs text-slate-700">{r.stock?.ourNo || '—'}</td>
+                  <td className="text-xs text-slate-700">{r.stock?.name || r.stock?.description || '—'}</td>
+                  <td className="text-slate-600 text-xs">{r.customer?.customerName || 'Walk-in'}</td>
+                  <td className="text-right font-mono text-xs text-slate-700">{r.quantity}</td>
+                  <td className="text-xs text-slate-600">{r.currencyCode}</td>
+                  <td className="text-right font-mono text-xs text-slate-700">{fmt(r.unitPriceFCY)}</td>
+                  <td className="text-right font-mono text-xs text-slate-600">{r.taxRateUsed}%</td>
                   <td className="text-right font-mono text-sm text-gold">₨ {fmt(r.totalPKR)}</td>
                   <td>
-                    <button onClick={() => setDelTarget(r)} className="text-danger/30 hover:text-danger text-xs transition-colors">Void</button>
+                    <button onClick={() => setDelTarget(r)} className="text-danger/60 hover:text-danger text-xs transition-colors">Void</button>
                   </td>
                 </tr>
               ))}
@@ -155,7 +163,7 @@ export default function SalesPage() {
           </div>
           <div><label className="field-label">Sale Date</label><input {...f('txDate')} type="date" /></div>
           <div className="col-span-2">
-            <label className="field-label">Customer <span className="normal-case text-slate-300 ml-1">(leave blank for walk-in)</span></label>
+            <label className="field-label">Customer <span className="normal-case text-slate-500 ml-1">(leave blank for walk-in)</span></label>
             <select {...f('customerId')} className="field-input">
               <option value="">Walk-in / No customer</option>
               {customers.map(c => <option key={c.customerId} value={c.customerId}>{c.customerName}</option>)}
@@ -163,7 +171,7 @@ export default function SalesPage() {
           </div>
 
           <div className="col-span-2 border-t border-slate-200 pt-4">
-            <label className="field-label">Product <span className="normal-case text-slate-300 ml-1">(showing in-stock items only)</span></label>
+            <label className="field-label">Product <span className="normal-case text-slate-500 ml-1">(showing in-stock items only)</span></label>
             <select value={form.stockId} onChange={e => pickStock(e.target.value)} className="field-input">
               <option value="">— Select product —</option>
               {stocks.map(s => (
@@ -176,9 +184,9 @@ export default function SalesPage() {
 
           {selStock && (
             <div className="col-span-2 bg-slate-100 rounded-lg px-4 py-3 grid grid-cols-3 gap-3 text-center">
-              <div><div className="text-accent font-mono text-sm">{selStock.foreignCurrency || 'PKR'} {fmt(selStock.foreignCurrencyPrice || 0)}</div><div className="text-slate-400 text-xs mt-0.5">Unit Price FCY</div></div>
-              <div><div className="text-slate-500 font-mono text-sm">{selStock.quantity}</div><div className="text-slate-400 text-xs mt-0.5">Available</div></div>
-              <div><div className="text-slate-500 text-sm">{selStock.stockType || '—'}</div><div className="text-slate-400 text-xs mt-0.5">Category</div></div>
+              <div><div className="text-sky-700 font-mono text-sm">{selStock.foreignCurrency || 'PKR'} {fmt(selStock.foreignCurrencyPrice || 0)}</div><div className="text-slate-600 text-xs mt-0.5">Unit Price FCY</div></div>
+              <div><div className="text-slate-700 font-mono text-sm">{selStock.quantity}</div><div className="text-slate-600 text-xs mt-0.5">Available</div></div>
+              <div><div className="text-slate-700 text-sm">{selStock.stockType || '—'}</div><div className="text-slate-600 text-xs mt-0.5">Category</div></div>
             </div>
           )}
 
@@ -198,9 +206,9 @@ export default function SalesPage() {
 
           {/* Total breakdown */}
           <div className="col-span-2 bg-slate-100 rounded-xl p-4 grid grid-cols-3 gap-4 text-center mt-1">
-            <div><div className="text-slate-500 font-mono text-sm">{selStock?.foreignCurrency || 'PKR'} {fmt((selStock?.foreignCurrencyPrice || 0) * Number(form.quantity))}</div><div className="text-sky-400 text-xs mt-0.5">Subtotal (FCY)</div></div>
-            <div><div className="text-slate-500 font-mono text-sm">₨ {fmt(totals.tax)}</div><div className="text-sky-400 text-xs mt-0.5">Tax (PKR)</div></div>
-            <div><div className="text-gold font-mono font-bold text-lg">₨ {fmt(totals.total)}</div><div className="text-sky-400 text-xs mt-0.5">TOTAL PKR</div></div>
+            <div><div className="text-slate-700 font-mono text-sm">{selStock?.foreignCurrency || 'PKR'} {fmt((selStock?.foreignCurrencyPrice || 0) * Number(form.quantity))}</div><div className="text-slate-600 text-xs mt-0.5">Subtotal (FCY)</div></div>
+            <div><div className="text-slate-700 font-mono text-sm">₨ {fmt(totals.tax)}</div><div className="text-slate-600 text-xs mt-0.5">Tax (PKR)</div></div>
+            <div><div className="text-gold font-mono font-bold text-lg">₨ {fmt(totals.total)}</div><div className="text-slate-600 text-xs mt-0.5">TOTAL PKR</div></div>
           </div>
         </div>
         <div className="flex justify-end gap-3 mt-5">
