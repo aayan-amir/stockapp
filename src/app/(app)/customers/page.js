@@ -50,7 +50,7 @@ export default function CustomersPage() {
       <div className="flex gap-2 mb-5">
         <input value={q} onChange={e => setQ(e.target.value)} onKeyDown={e => e.key === 'Enter' && load()} placeholder="Search by name…" className="field-input flex-1" />
         <button onClick={load} className="btn-ghost">Search</button>
-        <button onClick={() => setQ('')} className="btn-ghost text-white/30">Clear</button>
+        <button onClick={() => setQ('')} className="btn-ghost text-slate-400">Clear</button>
       </div>
 
       <div className="card overflow-hidden">
@@ -58,17 +58,17 @@ export default function CustomersPage() {
           <table className="data-table">
             <thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Filer</th><th>Address</th><th></th></tr></thead>
             <tbody>
-              {loading && <tr><td colSpan={6} className="text-center text-white/20 py-10">Loading…</td></tr>}
-              {!loading && rows.length === 0 && <tr><td colSpan={6} className="text-center text-white/20 py-10">No customers yet</td></tr>}
+              {loading && <tr><td colSpan={6} className="text-center text-slate-300 py-10">Loading…</td></tr>}
+              {!loading && rows.length === 0 && <tr><td colSpan={6} className="text-center text-slate-300 py-10">No customers yet</td></tr>}
               {rows.map(r => (
                 <tr key={r.customerId}>
                   <td className="font-semibold">{r.customerName}</td>
-                  <td className="text-white/50 text-xs font-mono">{r.phoneNumber || '—'}</td>
-                  <td className="text-white/40 text-xs">{r.email || '—'}</td>
-                  <td>{r.filerStatus ? <span className="badge bg-navy-300 text-accent/70">{r.filerStatus}</span> : '—'}</td>
-                  <td className="text-white/30 text-xs max-w-[200px] truncate">{r.address || '—'}</td>
+                  <td className="text-slate-500 text-xs font-mono">{r.phoneNumber || '—'}</td>
+                  <td className="text-slate-400 text-xs">{r.email || '—'}</td>
+                  <td>{r.filerStatus ? <span className="badge bg-slate-200 text-sky-500">{r.filerStatus}</span> : '—'}</td>
+                  <td className="text-slate-400 text-xs max-w-[200px] truncate">{r.address || '—'}</td>
                   <td className="whitespace-nowrap">
-                    <button onClick={() => openEdit(r)} className="text-accent/40 hover:text-accent text-xs mr-3 transition-colors">Edit</button>
+                    <button onClick={() => openEdit(r)} className="text-sky-400 hover:text-sky-600 text-xs mr-3 transition-colors">Edit</button>
                     <button onClick={() => setDelTarget(r)} className="text-danger/40 hover:text-danger text-xs transition-colors">Delete</button>
                   </td>
                 </tr>

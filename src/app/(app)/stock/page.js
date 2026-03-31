@@ -84,7 +84,7 @@ export default function StockPage() {
           placeholder="Search…" className="field-input flex-1"
         />
         <button onClick={load}        className="btn-ghost">Search</button>
-        <button onClick={() => { setQ(''); }} className="btn-ghost text-white/30">Clear</button>
+        <button onClick={() => { setQ(''); }} className="btn-ghost text-slate-400">Clear</button>
       </div>
 
       {/* Table */}
@@ -95,39 +95,46 @@ export default function StockPage() {
               <tr>
                 <th>Our No</th><th>OEM No</th><th>Name</th><th>Category</th><th>Description</th>
                 <th>Supplier</th><th className="text-right">In</th><th className="text-right">Out</th>
-                <th className="text-right">Qty</th><th>Price FCY</th><th>Updated</th><th></th>
+                <th className="text-right">Qty</th><th>Price FCY</th><th>Price PKR</th><th>Updated</th><th></th>
               </tr>
             </thead>
             <tbody>
-              {loading && <tr><td colSpan={12} className="text-center text-white/20 py-10">Loading…</td></tr>}
+              {loading && <tr><td colSpan={13} className="text-center text-slate-300 py-10">Loading…</td></tr>}
               {!loading && rows.length === 0 && (
-                <tr><td colSpan={12}><EmptyState icon="▦" title="No stock items" message="Add a new item to get started" action={<button onClick={openNew} className="btn-gold btn-sm">+ New Item</button>} /></td></tr>
+                <tr><td colSpan={13}><EmptyState icon="▦" title="No stock items" message="Add a new item to get started" action={<button onClick={openNew} className="btn-gold btn-sm">+ New Item</button>} /></td></tr>
               )}
-              {rows.map(row => (
+              {rows.map(row => {
+                const rate = currencies.find(c => c.currencyCode === row.foreignCurrency)
+                const pkrPrice = row.foreignCurrencyPrice && rate ? Number(row.foreignCurrencyPrice) * Number(rate.exchangeRateToPKR) : (row.foreignCurrency === 'PKR' && row.foreignCurrencyPrice ? Number(row.foreignCurrencyPrice) : null)
+                return (
                 <tr key={row.stockId}>
-                  <td className="font-mono text-accent/80 text-xs">{row.ourNo || '—'}</td>
-                  <td className="text-xs text-white/50">{row.oemNo || '—'}</td>
+                  <td className="font-mono text-sky-500 text-xs">{row.ourNo || '—'}</td>
+                  <td className="text-xs text-slate-400">{row.oemNo || '—'}</td>
                   <td className="max-w-[140px] truncate">{row.name || '—'}</td>
-                  <td><span className="badge bg-navy-300 text-accent/70">{row.stockType || '—'}</span></td>
+                  <td><span className="badge bg-slate-100 text-sky-500">{row.stockType || '—'}</span></td>
                   <td className="max-w-[180px] truncate">{row.description || '—'}</td>
-                  <td className="text-white/50 text-xs">{row.supplier || '—'}</td>
-                  <td className="text-right font-mono text-xs text-white/50">{row.stockIn}</td>
-                  <td className="text-right font-mono text-xs text-white/50">{row.stockOut}</td>
+                  <td className="text-slate-500 text-xs">{row.supplier || '—'}</td>
+                  <td className="text-right font-mono text-xs text-slate-500">{row.stockIn}</td>
+                  <td className="text-right font-mono text-xs text-slate-500">{row.stockOut}</td>
                   <td className="text-right">
                     <span className={row.quantity <= 0 ? 'badge-low' : row.quantity <= 5 ? 'badge-purchase' : 'badge-ok'}>
                       {row.quantity}
                     </span>
                   </td>
-                  <td className="font-mono text-xs text-white/60">
+                  <td className="font-mono text-xs text-slate-500">
                     {row.foreignCurrencyPrice ? `${row.foreignCurrency} ${fmt(row.foreignCurrencyPrice)}` : '—'}
                   </td>
-                  <td className="text-white/30 text-xs whitespace-nowrap">{fmtDate(row.lastUpdated)}</td>
+                  <td className="font-mono text-xs text-slate-700 font-semibold">
+                    {pkrPrice != null ? `₨ ${fmt(pkrPrice)}` : '—'}
+                  </td>
+                  <td className="text-slate-400 text-xs whitespace-nowrap">{fmtDate(row.lastUpdated)}</td>
                   <td className="whitespace-nowrap">
-                    <button onClick={() => openEdit(row)} className="text-accent/40 hover:text-accent text-xs mr-3 transition-colors">Edit</button>
+                    <button onClick={() => openEdit(row)} className="text-sky-400 hover:text-sky-600 text-xs mr-3 transition-colors">Edit</button>
                     <button onClick={() => setDelTarget(row)} className="text-danger/40 hover:text-danger text-xs transition-colors">Delete</button>
                   </td>
                 </tr>
-              ))}
+                )
+              })}
             </tbody>
           </table>
         </div>
@@ -164,7 +171,7 @@ export default function StockPage() {
           </div>
           <div><label className="field-label">Unit Price (FCY)</label><input {...inp('foreignCurrencyPrice')} type="number" step="0.01" placeholder="0.00" /></div>
           {editing && (
-            <div className="col-span-2 bg-navy-200 rounded-lg p-3 grid grid-cols-3 gap-3 text-center">
+            <div className="col-span-2 bg-slate-100 rounded-lg p-3 grid grid-cols-3 gap-3 text-center">
               {[['Stock In', editing.stockIn], ['Stock Out', editing.stockOut], ['Available', editing.quantity]].map(([l, v]) => (
                 <div key={l}><div className="text-gold font-mono font-bold">{v}</div><div className="text-accent/50 text-xs mt-0.5">{l}</div></div>
               ))}

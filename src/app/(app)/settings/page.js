@@ -7,8 +7,8 @@ import ConfirmDialog from '@/components/ConfirmDialog'
 function SettingSection({ title, children }) {
   return (
     <div className="card overflow-hidden mb-6">
-      <div className="px-5 py-4 border-b border-white/10 bg-navy-200">
-        <h2 className="font-bold text-white/80">{title}</h2>
+      <div className="px-5 py-4 border-b border-slate-200 bg-slate-100">
+        <h2 className="font-bold text-slate-700">{title}</h2>
       </div>
       <div className="p-5">{children}</div>
     </div>
@@ -54,7 +54,7 @@ function CurrenciesSection() {
               <td>{r.currencyName}</td>
               <td className="text-right font-mono">{r.exchangeRateToPKR}</td>
               <td className="whitespace-nowrap">
-                <button onClick={() => openEdit(r)} className="text-accent/40 hover:text-accent text-xs mr-3">Edit</button>
+                <button onClick={() => openEdit(r)} className="text-sky-400 hover:text-sky-600 text-xs mr-3">Edit</button>
                 {r.currencyCode !== 'PKR' && <button onClick={() => setDel(r)} className="text-danger/40 hover:text-danger text-xs">Delete</button>}
               </td>
             </tr>
@@ -118,9 +118,9 @@ function TaxRatesSection() {
             <tr key={r.taxRateId}>
               <td className="font-semibold">{r.taxName}</td>
               <td className="text-right font-mono text-gold">{r.taxRatePercent}%</td>
-              <td className="text-white/40 text-xs">{r.description || '—'}</td>
+              <td className="text-slate-400 text-xs">{r.description || '—'}</td>
               <td className="whitespace-nowrap">
-                <button onClick={() => openEdit(r)} className="text-accent/40 hover:text-accent text-xs mr-3">Edit</button>
+                <button onClick={() => openEdit(r)} className="text-sky-400 hover:text-sky-600 text-xs mr-3">Edit</button>
                 <button onClick={() => setDel(r)} className="text-danger/40 hover:text-danger text-xs">Delete</button>
               </td>
             </tr>
@@ -174,13 +174,13 @@ function CategoriesSection() {
       </div>
       <div className="flex flex-wrap gap-2">
         {rows.map(r => (
-          <div key={r.typeId} className="flex items-center gap-2 bg-navy-200 px-3 py-1.5 rounded-lg border border-white/5">
-            <span className="text-sm text-white/70">{r.typeName}</span>
-            <button onClick={() => { setEditing(r); setName(r.typeName); setModal(true) }} className="text-accent/40 hover:text-accent text-xs transition-colors">Edit</button>
+          <div key={r.typeId} className="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
+            <span className="text-sm text-slate-600">{r.typeName}</span>
+            <button onClick={() => { setEditing(r); setName(r.typeName); setModal(true) }} className="text-sky-400 hover:text-sky-600 text-xs transition-colors">Edit</button>
             <button onClick={() => setDel(r)} className="text-danger/30 hover:text-danger text-xs transition-colors">×</button>
           </div>
         ))}
-        {rows.length === 0 && <p className="text-white/20 text-sm">No categories yet</p>}
+        {rows.length === 0 && <p className="text-slate-300 text-sm">No categories yet</p>}
       </div>
 
       <Modal open={modal} onClose={() => setModal(false)} title={editing ? 'Edit Category' : 'Add Category'}>
