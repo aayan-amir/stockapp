@@ -77,12 +77,12 @@ export default function LedgerPage() {
         <div className="stat-card">
           <div className="stat-value text-success">₨ {fmt(totalSales)}</div>
           <div className="stat-label">Total Sales</div>
-          <div className="text-slate-300 text-xs mt-1">{rows.filter(r => r.transactionType === 'Sale').length} transaction(s)</div>
+          <div className="text-slate-600 text-xs mt-1">{rows.filter(r => r.transactionType === 'Sale').length} transaction(s)</div>
         </div>
         <div className="stat-card">
           <div className="stat-value text-warn">₨ {fmt(totalPurchases)}</div>
           <div className="stat-label">Total Purchases</div>
-          <div className="text-slate-300 text-xs mt-1">{rows.filter(r => r.transactionType === 'Purchase').length} transaction(s)</div>
+          <div className="text-slate-600 text-xs mt-1">{rows.filter(r => r.transactionType === 'Purchase').length} transaction(s)</div>
         </div>
       </div>
 
@@ -100,27 +100,27 @@ export default function LedgerPage() {
               </tr>
             </thead>
             <tbody>
-              {loading && <tr><td colSpan={11} className="text-center text-slate-300 py-10">Loading…</td></tr>}
-              {!loading && rows.length === 0 && <tr><td colSpan={11} className="text-center text-slate-300 py-10">No records match the current filters</td></tr>}
+              {loading && <tr><td colSpan={11} className="text-center text-slate-500 py-10">Loading…</td></tr>}
+              {!loading && rows.length === 0 && <tr><td colSpan={11} className="text-center text-slate-500 py-10">No records match the current filters</td></tr>}
               {rows.map(r => (
                 <tr key={`${r.transactionType}-${r.saleId}`}>
                   <td><span className={r.transactionType === 'Sale' ? 'badge-sale' : 'badge-purchase'}>{r.transactionType}</span></td>
-                  <td className="font-mono text-xs text-sky-500">{r.invoiceNo || '—'}</td>
-                  <td className="text-xs text-slate-400 whitespace-nowrap">{fmtDate(r.txDate)}</td>
+                  <td className="font-mono text-xs text-sky-600">{r.invoiceNo || '—'}</td>
+                  <td className="text-xs text-slate-600 whitespace-nowrap">{fmtDate(r.txDate)}</td>
                   <td className="max-w-[160px]">
                     <div className="text-xs truncate">{r.stock?.name || r.stock?.description || '—'}</div>
                     <div className="text-xs text-slate-400 truncate">{r.stock?.ourNo}</div>
                   </td>
-                  <td className="text-xs text-slate-500">
+                  <td className="text-xs text-slate-600">
                     {r.transactionType === 'Sale'
                       ? (r.customer?.customerName || 'Walk-in')
                       : (r.supplierName || '—')}
                   </td>
-                  <td className="text-right font-mono text-xs">{r.quantity}</td>
-                  <td className="text-right font-mono text-xs text-slate-500">{fmt(r.unitPriceFCY)}</td>
-                  <td className="text-xs text-slate-400">{r.currencyCode}</td>
-                  <td className="text-right font-mono text-xs text-slate-400">{r.taxRateUsed}%</td>
-                  <td className="text-right font-mono text-xs text-slate-400">{fmt(r.freightPKR)}</td>
+                  <td className="text-right font-mono text-xs text-slate-700">{r.quantity}</td>
+                  <td className="text-right font-mono text-xs text-slate-600">{fmt(r.unitPriceFCY)}</td>
+                  <td className="text-xs text-slate-600">{r.currencyCode}</td>
+                  <td className="text-right font-mono text-xs text-slate-600">{r.taxRateUsed}%</td>
+                  <td className="text-right font-mono text-xs text-slate-600">{fmt(r.freightPKR)}</td>
                   <td className={`text-right font-mono text-sm font-semibold ${r.transactionType === 'Sale' ? 'text-success' : 'text-gold'}`}>
                     ₨ {fmt(r.totalPKR)}
                   </td>
