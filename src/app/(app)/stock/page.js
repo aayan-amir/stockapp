@@ -99,7 +99,7 @@ export default function StockPage() {
               </tr>
             </thead>
             <tbody>
-              {loading && <tr><td colSpan={13} className="text-center text-slate-300 py-10">Loading…</td></tr>}
+              {loading && <tr><td colSpan={13} className="text-center text-slate-500 py-10">Loading…</td></tr>}
               {!loading && rows.length === 0 && (
                 <tr><td colSpan={13}><EmptyState icon="▦" title="No stock items" message="Add a new item to get started" action={<button onClick={openNew} className="btn-gold btn-sm">+ New Item</button>} /></td></tr>
               )}
@@ -108,10 +108,10 @@ export default function StockPage() {
                 const pkrPrice = row.foreignCurrencyPrice && rate ? Number(row.foreignCurrencyPrice) * Number(rate.exchangeRateToPKR) : (row.foreignCurrency === 'PKR' && row.foreignCurrencyPrice ? Number(row.foreignCurrencyPrice) : null)
                 return (
                 <tr key={row.stockId}>
-                  <td className="font-mono text-sky-500 text-xs">{row.ourNo || '—'}</td>
-                  <td className="text-xs text-slate-400">{row.oemNo || '—'}</td>
+                  <td className="font-mono text-sky-600 text-xs">{row.ourNo || '—'}</td>
+                  <td className="text-xs text-slate-600">{row.oemNo || '—'}</td>
                   <td className="max-w-[140px] truncate">{row.name || '—'}</td>
-                  <td><span className="badge bg-slate-100 text-sky-500">{row.stockType || '—'}</span></td>
+                  <td><span className="badge bg-slate-100 text-sky-700">{row.stockType || '—'}</span></td>
                   <td className="max-w-[180px] truncate">{row.description || '—'}</td>
                   <td className="text-slate-500 text-xs">{row.supplier || '—'}</td>
                   <td className="text-right font-mono text-xs text-slate-500">{row.stockIn}</td>
@@ -127,7 +127,7 @@ export default function StockPage() {
                   <td className="font-mono text-xs text-slate-700 font-semibold">
                     {pkrPrice != null ? `₨ ${fmt(pkrPrice)}` : '—'}
                   </td>
-                  <td className="text-slate-400 text-xs whitespace-nowrap">{fmtDate(row.lastUpdated)}</td>
+                  <td className="text-slate-600 text-xs whitespace-nowrap">{fmtDate(row.lastUpdated)}</td>
                   <td className="whitespace-nowrap">
                     <button onClick={() => openEdit(row)} className="text-sky-400 hover:text-sky-600 text-xs mr-3 transition-colors">Edit</button>
                     <button onClick={() => setDelTarget(row)} className="text-danger/40 hover:text-danger text-xs transition-colors">Delete</button>

@@ -1,4 +1,5 @@
 import Sidebar from '@/components/Sidebar'
+import AutoTasks from '@/components/AutoTasks'
 
 export default function AppLayout({ children }) {
   return (
@@ -7,6 +8,7 @@ export default function AppLayout({ children }) {
       <main className="flex-1 overflow-auto p-6 lg:p-8 min-h-screen">
         {children}
       </main>
+      <AutoTasks />
     </div>
   )
 }

@@ -58,18 +58,18 @@ export default function CustomersPage() {
           <table className="data-table">
             <thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Filer</th><th>Address</th><th></th></tr></thead>
             <tbody>
-              {loading && <tr><td colSpan={6} className="text-center text-slate-300 py-10">Loading…</td></tr>}
-              {!loading && rows.length === 0 && <tr><td colSpan={6} className="text-center text-slate-300 py-10">No customers yet</td></tr>}
+              {loading && <tr><td colSpan={6} className="text-center text-slate-500 py-10">Loading…</td></tr>}
+              {!loading && rows.length === 0 && <tr><td colSpan={6} className="text-center text-slate-500 py-10">No customers yet</td></tr>}
               {rows.map(r => (
                 <tr key={r.customerId}>
                   <td className="font-semibold">{r.customerName}</td>
-                  <td className="text-slate-500 text-xs font-mono">{r.phoneNumber || '—'}</td>
-                  <td className="text-slate-400 text-xs">{r.email || '—'}</td>
-                  <td>{r.filerStatus ? <span className="badge bg-slate-200 text-sky-500">{r.filerStatus}</span> : '—'}</td>
-                  <td className="text-slate-400 text-xs max-w-[200px] truncate">{r.address || '—'}</td>
+                  <td className="text-slate-600 text-xs font-mono">{r.phoneNumber || '—'}</td>
+                  <td className="text-slate-600 text-xs">{r.email || '—'}</td>
+                  <td>{r.filerStatus ? <span className="badge bg-slate-200 text-sky-700">{r.filerStatus}</span> : '—'}</td>
+                  <td className="text-slate-600 text-xs max-w-[200px] truncate">{r.address || '—'}</td>
                   <td className="whitespace-nowrap">
-                    <button onClick={() => openEdit(r)} className="text-sky-400 hover:text-sky-600 text-xs mr-3 transition-colors">Edit</button>
-                    <button onClick={() => setDelTarget(r)} className="text-danger/40 hover:text-danger text-xs transition-colors">Delete</button>
+                    <button onClick={() => openEdit(r)} className="text-sky-600 hover:text-sky-700 text-xs mr-3 transition-colors">Edit</button>
+                    <button onClick={() => setDelTarget(r)} className="text-danger/60 hover:text-danger text-xs transition-colors">Delete</button>
                   </td>
                 </tr>
               ))}
