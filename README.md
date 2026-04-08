@@ -26,10 +26,10 @@ A full-stack inventory, purchases, and sales management web app built with **Nex
 ## Quick Start
 
 ```bash
-# 1. Run setup (auto-creates .env, installs deps, migrates DB, seeds data)
+# 1. Run one-time setup (creates .env if missing, installs deps, prepares DB)
 npm run setup
 
-# 2. Start dev server
+# 2. Start dev server (no need to re-run setup each time)
 npm run dev
 ```
 
@@ -37,7 +37,7 @@ Open [http://localhost:3000](http://localhost:3000). Default PIN: **1234** (chan
 
 ## Environment Variables
 
-`npm run setup` automatically copies `.env.example` to `.env` on first run. You can edit `.env` to customise values:
+`npm run setup` (or any script using `env:ensure`) automatically copies `.env.example` to `.env` on first run. You can edit `.env` to customise values:
 
 ```env
 # Login PIN (default: 1234)
@@ -80,6 +80,6 @@ stockapp/
 ```bash
 npm run dev          # Start development server
 npm run build        # Production build
-npm run setup        # Install + db push + seed (first run)
-npm run db:reset     # Drop and recreate the database
+npm run setup        # One-time install + db init
+npm run db:init      # Push schema + seed data (when needed)
 ```
