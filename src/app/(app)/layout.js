@@ -1,15 +1,7 @@
-import { cookies } from 'next/headers'
-import { redirect } from 'next/navigation'
 import Sidebar from '@/components/Sidebar'
 import AutoTasks from '@/components/AutoTasks'
 
-const COOKIE = 'sms_auth'
-const PIN = process.env.ACCESS_PIN || '1234'
-
-export default async function AppLayout({ children }) {
-  const token = (await cookies()).get(COOKIE)?.value
-  if (token !== PIN) redirect('/login')
-
+export default function AppLayout({ children }) {
   return (
     <div className="flex min-h-screen">
       <Sidebar />

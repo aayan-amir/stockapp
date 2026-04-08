@@ -28,6 +28,8 @@ export async function POST(req) {
       stockType:            b.stockType   || null,
       description:          b.description || null,
       supplier:             b.supplier    || null,
+      foreignCurrency:      b.foreignCurrency      || null,
+      foreignCurrencyPrice: b.foreignCurrencyPrice ? Number(b.foreignCurrencyPrice) : null,
     },
   })
   return NextResponse.json(stock, { status: 201 })
