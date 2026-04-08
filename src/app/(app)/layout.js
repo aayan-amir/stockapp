@@ -11,7 +11,7 @@ export default async function AppLayout({ children }) {
   if (token !== PIN) redirect('/login')
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen bg-[#0f1115]">
       <Sidebar />
       <main className="flex-1 overflow-auto p-6 lg:p-8 min-h-screen">
         {children}

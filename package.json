@@ -3,12 +3,14 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
+    "env:ensure": "node scripts/copy-env.js",
+    "dev": "npm run env:ensure && next dev",
+    "build": "npm run env:ensure && npx prisma generate && next build",
+    "start": "npm run env:ensure && next start",
     "db:push": "prisma db push",
     "db:seed": "node prisma/seed.js",
-    "setup": "node scripts/copy-env.js && npm install && npx prisma db push && node prisma/seed.js"
+    "db:init": "npm run env:ensure && npx prisma db push && npm run db:seed",
+    "setup": "npm run env:ensure && npm install && npm run db:init"
   },
   "dependencies": {
     "@prisma/client": "^5.10.0",

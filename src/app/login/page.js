@@ -27,7 +27,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-[#0f1115] px-4">
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="text-center mb-10">
@@ -35,7 +35,7 @@ export default function LoginPage() {
             <span className="text-gold text-3xl font-bold">S</span>
           </div>
           <h1 className="text-2xl font-bold text-gold tracking-tight">Stock Management</h1>
-          <p className="text-accent-dim text-sm mt-1">Enter your access PIN to continue</p>        </div>
+          <p className="text-slate-400 text-sm mt-1">Enter your access PIN to continue</p>        </div>
 
         <form onSubmit={handleSubmit} className="card p-6 space-y-4">
           <div>
@@ -61,7 +61,7 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p className="text-center text-slate-600 text-xs mt-6">
+        <p className="text-center text-slate-400 text-xs mt-6">
           Default PIN: 1234 · Change via ACCESS_PIN env var
         </p>
       </div>
