@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { fmt, fmtDate } from '@/lib/utils'
+import { fmtDate } from '@/lib/utils'
 
 function StatCard({ label, value, sub, color = 'text-gold' }) {
   return (
@@ -28,7 +28,7 @@ export default function Dashboard() {
   )
 
   const { totalStockItems, totalStockQty, lowStockItems,
-          monthSalesPKR, monthSalesCount, monthPurchasesPKR, monthPurchasesCount,
+          monthSalesCount, monthPurchasesCount,
           recentTx, topProducts } = data
 
   return (
@@ -45,8 +45,8 @@ export default function Dashboard() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard label="Stock Items"      value={totalStockItems}           sub={`${totalStockQty} total units`} />
         <StatCard label="Low Stock Alerts" value={lowStockItems}             color={lowStockItems > 0 ? 'text-danger' : 'text-success'} sub="≤ 5 units remaining" />
-        <StatCard label="Sales This Month" value={`₨ ${fmt(monthSalesPKR)}`} color="text-success" sub={`${monthSalesCount} invoice(s)`} />
-        <StatCard label="Purchases This Month" value={`₨ ${fmt(monthPurchasesPKR)}`} color="text-warn" sub={`${monthPurchasesCount} order(s)`} />
+        <StatCard label="Sales This Month" value={monthSalesCount} color="text-success" sub="invoice(s)" />
+        <StatCard label="Purchases This Month" value={monthPurchasesCount} color="text-warn" sub="order(s)" />
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
@@ -60,12 +60,12 @@ export default function Dashboard() {
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Invoice</th><th>Type</th><th>Product</th><th>Party</th><th>Date</th><th className="text-right">Total PKR</th>
+                  <th>Invoice</th><th>Type</th><th>Product</th><th>Party</th><th>Date</th>
                 </tr>
               </thead>
               <tbody>
                 {recentTx.length === 0 && (
-                  <tr><td colSpan={6} className="text-center text-slate-500 py-8">No transactions yet</td></tr>
+                  <tr><td colSpan={5} className="text-center text-slate-500 py-8">No transactions yet</td></tr>
                 )}
                 {recentTx.map(tx => (
                   <tr key={tx.saleId}>
@@ -74,7 +74,6 @@ export default function Dashboard() {
                     <td className="max-w-[140px] truncate text-slate-700">{tx.stock?.ourNo || '—'} {tx.stock?.description ? `· ${tx.stock.description}` : ''}</td>
                     <td className="text-slate-600 text-xs">{tx.transactionType === 'Sale' ? (tx.customer?.customerName || 'Walk-in') : (tx.supplierName || '—')}</td>
                     <td className="text-slate-600 text-xs whitespace-nowrap">{fmtDate(tx.txDate)}</td>
-                    <td className="text-right font-mono text-xs">₨ {fmt(tx.totalPKR)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -97,7 +96,6 @@ export default function Dashboard() {
                   <div className="text-xs text-slate-600 truncate">{t.stock?.description}</div>
                 </div>
                 <div className="text-right shrink-0">
-                  <div className="text-xs font-mono text-gold">₨ {fmt(t._sum.totalPKR)}</div>
                   <div className="text-xs text-slate-600">{t._sum.quantity} sold</div>
                 </div>
               </div>
