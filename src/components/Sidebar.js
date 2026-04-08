@@ -27,7 +27,7 @@ export default function Sidebar() {
       {/* Logo */}
       <div className="px-5 pt-6 pb-5 border-b border-slate-200">
         <div className="text-gold font-bold text-lg leading-tight tracking-tight">STOCK</div>
-        <div className="text-sky-400 text-[10px] tracking-[0.35em] uppercase mt-0.5 font-mono">Management v3</div>
+        <div className="text-sky-600 text-[10px] tracking-[0.35em] uppercase mt-0.5 font-mono">Management v3</div>
       </div>
 
       {/* Nav links */}
@@ -68,7 +68,7 @@ export default function Sidebar() {
       <div className="p-3 border-t border-slate-200">
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-danger hover:bg-danger/10 transition-all"
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-600 hover:text-danger hover:bg-danger/10 transition-all"
         >
           <span className="text-base w-5 text-center">⇥</span>
           Logout

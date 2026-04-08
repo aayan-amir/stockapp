@@ -55,7 +55,7 @@ function CurrenciesSection() {
               <td className="text-right font-mono">{r.exchangeRateToPKR}</td>
               <td className="whitespace-nowrap">
                 <button onClick={() => openEdit(r)} className="text-sky-600 hover:text-sky-700 text-xs mr-3">Edit</button>
-                {r.currencyCode !== 'PKR' && <button onClick={() => setDel(r)} className="text-danger/60 hover:text-danger text-xs">Delete</button>}
+                {r.currencyCode !== 'PKR' && <button onClick={() => setDel(r)} className="text-danger/80 hover:text-danger text-xs">Delete</button>}
               </td>
             </tr>
           ))}
@@ -121,7 +121,7 @@ function TaxRatesSection() {
               <td className="text-slate-600 text-xs">{r.description || '—'}</td>
               <td className="whitespace-nowrap">
                 <button onClick={() => openEdit(r)} className="text-sky-600 hover:text-sky-700 text-xs mr-3">Edit</button>
-                <button onClick={() => setDel(r)} className="text-danger/60 hover:text-danger text-xs">Delete</button>
+                <button onClick={() => setDel(r)} className="text-danger/80 hover:text-danger text-xs">Delete</button>
               </td>
             </tr>
           ))}
@@ -177,7 +177,7 @@ function CategoriesSection() {
           <div key={r.typeId} className="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
             <span className="text-sm text-slate-600">{r.typeName}</span>
             <button onClick={() => { setEditing(r); setName(r.typeName); setModal(true) }} className="text-sky-600 hover:text-sky-700 text-xs transition-colors">Edit</button>
-            <button onClick={() => setDel(r)} className="text-danger/60 hover:text-danger text-xs transition-colors">×</button>
+            <button onClick={() => setDel(r)} className="text-danger/80 hover:text-danger text-xs transition-colors">×</button>
           </div>
         ))}
         {rows.length === 0 && <p className="text-slate-500 text-sm">No categories yet</p>}

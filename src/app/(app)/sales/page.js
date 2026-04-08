@@ -84,7 +84,7 @@ export default function SalesPage() {
       <div className="flex gap-2 mb-5">
         <input value={q} onChange={e => setQ(e.target.value)} onKeyDown={e => e.key === 'Enter' && load()} placeholder="Search invoice, customer, product…" className="field-input flex-1" />
         <button onClick={load} className="btn-ghost">Search</button>
-        <button onClick={() => setQ('')} className="btn-ghost text-slate-400">Clear</button>
+        <button onClick={() => setQ('')} className="btn-ghost text-slate-600">Clear</button>
       </div>
 
       <div className="card overflow-hidden">
@@ -108,7 +108,7 @@ export default function SalesPage() {
                   <td className="text-slate-600 text-xs">{r.customer?.customerName || 'Walk-in'}</td>
                   <td className="text-right font-mono text-xs text-slate-700">{r.quantity}</td>
                   <td>
-                    <button onClick={() => setDelTarget(r)} className="text-danger/60 hover:text-danger text-xs transition-colors">Void</button>
+                    <button onClick={() => setDelTarget(r)} className="text-danger/80 hover:text-danger text-xs transition-colors">Void</button>
                   </td>
                 </tr>
               ))}
