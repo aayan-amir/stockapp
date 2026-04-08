@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState, useCallback } from 'react'
 import PageHeader from '@/components/PageHeader'
-import { fmt, fmtDate } from '@/lib/utils'
+import { fmtDate } from '@/lib/utils'
 
 export default function LedgerPage() {
   const [rows,    setRows]    = useState([])
@@ -41,9 +41,6 @@ export default function LedgerPage() {
 
   useEffect(() => { load() }, [load])
 
-  const totalSales     = rows.filter(r => r.transactionType === 'Sale').reduce((s, r) => s + (r.totalPKR || 0), 0)
-  const totalPurchases = rows.filter(r => r.transactionType === 'Purchase').reduce((s, r) => s + (r.totalPKR || 0), 0)
-
   return (
     <div>
       <PageHeader title="Ledger" subtitle="Sales & Purchases" />
@@ -72,20 +69,6 @@ export default function LedgerPage() {
         <button onClick={() => { setType('All'); setFrom(''); setTo(''); setQ('') }} className="btn-ghost text-slate-400">Reset</button>
       </div>
 
-      {/* Summary KPIs */}
-      <div className="grid grid-cols-2 gap-4 mb-5">
-        <div className="stat-card">
-          <div className="stat-value text-success">₨ {fmt(totalSales)}</div>
-          <div className="stat-label">Total Sales</div>
-          <div className="text-slate-600 text-xs mt-1">{rows.filter(r => r.transactionType === 'Sale').length} transaction(s)</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-value text-warn">₨ {fmt(totalPurchases)}</div>
-          <div className="stat-label">Total Purchases</div>
-          <div className="text-slate-600 text-xs mt-1">{rows.filter(r => r.transactionType === 'Purchase').length} transaction(s)</div>
-        </div>
-      </div>
-
       {/* Ledger table */}
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
@@ -94,14 +77,11 @@ export default function LedgerPage() {
               <tr>
                 <th>Type</th><th>Invoice</th><th>Date</th><th>Product</th>
                 <th>Party</th><th className="text-right">Qty</th>
-                <th className="text-right">Unit FCY</th><th>Cur</th>
-                <th className="text-right">Tax%</th><th className="text-right">Freight</th>
-                <th className="text-right">Total PKR</th>
               </tr>
             </thead>
             <tbody>
-              {loading && <tr><td colSpan={11} className="text-center text-slate-500 py-10">Loading…</td></tr>}
-              {!loading && rows.length === 0 && <tr><td colSpan={11} className="text-center text-slate-500 py-10">No records match the current filters</td></tr>}
+              {loading && <tr><td colSpan={6} className="text-center text-slate-500 py-10">Loading…</td></tr>}
+              {!loading && rows.length === 0 && <tr><td colSpan={6} className="text-center text-slate-500 py-10">No records match the current filters</td></tr>}
               {rows.map(r => (
                 <tr key={`${r.transactionType}-${r.saleId}`}>
                   <td><span className={r.transactionType === 'Sale' ? 'badge-sale' : 'badge-purchase'}>{r.transactionType}</span></td>
@@ -114,16 +94,9 @@ export default function LedgerPage() {
                   <td className="text-xs text-slate-600">
                     {r.transactionType === 'Sale'
                       ? (r.customer?.customerName || 'Walk-in')
-                      : (r.supplierName || '—')}
+                        : (r.supplierName || '—')}
                   </td>
                   <td className="text-right font-mono text-xs text-slate-700">{r.quantity}</td>
-                  <td className="text-right font-mono text-xs text-slate-600">{fmt(r.unitPriceFCY)}</td>
-                  <td className="text-xs text-slate-600">{r.currencyCode}</td>
-                  <td className="text-right font-mono text-xs text-slate-600">{r.taxRateUsed}%</td>
-                  <td className="text-right font-mono text-xs text-slate-600">{fmt(r.freightPKR)}</td>
-                  <td className={`text-right font-mono text-sm font-semibold ${r.transactionType === 'Sale' ? 'text-success' : 'text-gold'}`}>
-                    ₨ {fmt(r.totalPKR)}
-                  </td>
                 </tr>
               ))}
             </tbody>

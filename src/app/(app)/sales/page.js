@@ -3,12 +3,11 @@ import { useEffect, useState, useCallback } from 'react'
 import PageHeader from '@/components/PageHeader'
 import Modal from '@/components/Modal'
 import ConfirmDialog from '@/components/ConfirmDialog'
-import { fmt, fmtDate, calcTotal, today } from '@/lib/utils'
+import { fmtDate, today } from '@/lib/utils'
 
 const EMPTY = {
   invoiceNo:'', txDate: today(), customerId:'', notes:'',
-  stockId:'', quantity:'', taxRateUsed:'18', freightPKR:'', otherChargesPKR:'',
-  exchangeRateUsed:'1',
+  stockId:'', quantity:'',
 }
 
 export default function SalesPage() {
@@ -20,8 +19,6 @@ export default function SalesPage() {
   const [error,      setError]     = useState('')
   const [stocks,     setStocks]    = useState([])
   const [customers,  setCustomers] = useState([])
-  const [taxRates,   setTaxRates]  = useState([])
-  const [currencies, setCurrencies] = useState([])
   const [selStock,   setSelStock]  = useState(null)   // full stock record
   const [q,          setQ]         = useState('')
   const [delTarget,  setDelTarget] = useState(null)
@@ -36,8 +33,6 @@ export default function SalesPage() {
   useEffect(() => {
     fetch('/api/stock').then(r => r.json()).then(d => setStocks(d.filter(s => s.quantity > 0)))
     fetch('/api/customers').then(r => r.json()).then(setCustomers)
-    fetch('/api/taxrates').then(r => r.json()).then(setTaxRates)
-    fetch('/api/currencies').then(r => r.json()).then(setCurrencies)
   }, [])
 
   const f = k => ({ value: form[k] ?? '', onChange: e => setForm(p => ({ ...p, [k]: e.target.value })), className: 'field-input' })
@@ -45,23 +40,8 @@ export default function SalesPage() {
   function pickStock(id) {
     const s = stocks.find(s => s.stockId === Number(id))
     setSelStock(s || null)
-    if (s) {
-      const cur  = s.foreignCurrency || 'PKR'
-      const rate = currencies.find(c => c.currencyCode === cur)
-      setForm(p => ({ ...p, stockId: id, exchangeRateUsed: rate ? String(rate.exchangeRateToPKR) : '1' }))
-    } else {
-      setForm(p => ({ ...p, stockId: id, exchangeRateUsed: '1' }))
-    }
+    setForm(p => ({ ...p, stockId: id }))
   }
-
-  const totals = calcTotal({
-    qty:     Number(form.quantity),
-    unitFCY: selStock?.foreignCurrencyPrice || 0,
-    exRate:  Number(form.exchangeRateUsed) || 1,
-    taxRate: Number(form.taxRateUsed),
-    freight: Number(form.freightPKR),
-    other:   Number(form.otherChargesPKR),
-  })
 
   async function genInvoice() {
     const r = await fetch('/api/invoice?type=Sale')
@@ -78,16 +58,9 @@ export default function SalesPage() {
     if (Number(form.quantity) > selStock.quantity) return setError(`Only ${selStock.quantity} unit(s) available`)
 
     setSaving(true)
-    const payload = {
-      ...form,
-      unitPriceFCY:     selStock.foreignCurrencyPrice || 0,
-      currencyCode:     selStock.foreignCurrency || 'PKR',
-      exchangeRateUsed: Number(form.exchangeRateUsed) || 1,
-      totalPKR:         totals.total,
-    }
     const res = await fetch('/api/sales', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(form),
     })
     if (!res.ok) { const d = await res.json(); setError(d.error || 'Save failed'); setSaving(false); return }
     setSaving(false); setModal(false); setForm(EMPTY); setSelStock(null); load()
@@ -120,14 +93,12 @@ export default function SalesPage() {
             <thead>
               <tr>
                 <th>Invoice</th><th>Date</th><th>Our No.</th><th>Name</th><th>Customer</th>
-                <th className="text-right">Qty</th><th>Currency</th>
-                <th className="text-right">Unit FCY</th><th className="text-right">Tax %</th>
-                <th className="text-right">Total PKR</th><th></th>
+                <th className="text-right">Qty</th><th></th>
               </tr>
             </thead>
             <tbody>
-              {loading && <tr><td colSpan={11} className="text-center text-slate-500 py-10">Loading…</td></tr>}
-              {!loading && rows.length === 0 && <tr><td colSpan={11} className="text-center text-slate-500 py-10">No sales yet</td></tr>}
+              {loading && <tr><td colSpan={7} className="text-center text-slate-500 py-10">Loading…</td></tr>}
+              {!loading && rows.length === 0 && <tr><td colSpan={7} className="text-center text-slate-500 py-10">No sales yet</td></tr>}
               {rows.map(r => (
                 <tr key={r.saleId}>
                   <td className="font-mono text-xs text-sky-600">{r.invoiceNo || '—'}</td>
@@ -136,10 +107,6 @@ export default function SalesPage() {
                   <td className="text-xs text-slate-700">{r.stock?.name || r.stock?.description || '—'}</td>
                   <td className="text-slate-600 text-xs">{r.customer?.customerName || 'Walk-in'}</td>
                   <td className="text-right font-mono text-xs text-slate-700">{r.quantity}</td>
-                  <td className="text-xs text-slate-600">{r.currencyCode}</td>
-                  <td className="text-right font-mono text-xs text-slate-700">{fmt(r.unitPriceFCY)}</td>
-                  <td className="text-right font-mono text-xs text-slate-600">{r.taxRateUsed}%</td>
-                  <td className="text-right font-mono text-sm text-gold">₨ {fmt(r.totalPKR)}</td>
                   <td>
                     <button onClick={() => setDelTarget(r)} className="text-danger/60 hover:text-danger text-xs transition-colors">Void</button>
                   </td>
@@ -183,8 +150,7 @@ export default function SalesPage() {
           </div>
 
           {selStock && (
-            <div className="col-span-2 bg-slate-100 rounded-lg px-4 py-3 grid grid-cols-3 gap-3 text-center">
-              <div><div className="text-sky-700 font-mono text-sm">{selStock.foreignCurrency || 'PKR'} {fmt(selStock.foreignCurrencyPrice || 0)}</div><div className="text-slate-600 text-xs mt-0.5">Unit Price FCY</div></div>
+            <div className="col-span-2 bg-slate-100 rounded-lg px-4 py-3 grid grid-cols-2 gap-3 text-center">
               <div><div className="text-slate-700 font-mono text-sm">{selStock.quantity}</div><div className="text-slate-600 text-xs mt-0.5">Available</div></div>
               <div><div className="text-slate-700 text-sm">{selStock.stockType || '—'}</div><div className="text-slate-600 text-xs mt-0.5">Category</div></div>
             </div>
@@ -194,22 +160,7 @@ export default function SalesPage() {
             <label className="field-label">Qty to Sell</label>
             <input {...f('quantity')} type="number" min="1" max={selStock?.quantity} placeholder="0" />
           </div>
-          <div>
-            <label className="field-label">Tax Rate</label>
-            <select {...f('taxRateUsed')} className="field-input">
-              {taxRates.map(t => <option key={t.taxRateId} value={t.taxRatePercent}>{t.taxName} ({t.taxRatePercent}%)</option>)}
-            </select>
-          </div>
-          <div><label className="field-label">Freight (PKR)</label><input {...f('freightPKR')} type="number" step="0.01" placeholder="0.00" /></div>
-          <div><label className="field-label">Other Charges (PKR)</label><input {...f('otherChargesPKR')} type="number" step="0.01" placeholder="0.00" /></div>
           <div className="col-span-2"><label className="field-label">Notes</label><input {...f('notes')} placeholder="Optional notes" /></div>
-
-          {/* Total breakdown */}
-          <div className="col-span-2 bg-slate-100 rounded-xl p-4 grid grid-cols-3 gap-4 text-center mt-1">
-            <div><div className="text-slate-700 font-mono text-sm">{selStock?.foreignCurrency || 'PKR'} {fmt((selStock?.foreignCurrencyPrice || 0) * Number(form.quantity))}</div><div className="text-slate-600 text-xs mt-0.5">Subtotal (FCY)</div></div>
-            <div><div className="text-slate-700 font-mono text-sm">₨ {fmt(totals.tax)}</div><div className="text-slate-600 text-xs mt-0.5">Tax (PKR)</div></div>
-            <div><div className="text-gold font-mono font-bold text-lg">₨ {fmt(totals.total)}</div><div className="text-slate-600 text-xs mt-0.5">TOTAL PKR</div></div>
-          </div>
         </div>
         <div className="flex justify-end gap-3 mt-5">
           <button onClick={() => setModal(false)} className="btn-ghost">Cancel</button>

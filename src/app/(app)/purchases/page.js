@@ -2,12 +2,11 @@
 import { useEffect, useState, useCallback } from 'react'
 import PageHeader from '@/components/PageHeader'
 import Modal from '@/components/Modal'
-import { fmt, fmtDate, calcTotal, today } from '@/lib/utils'
+import { fmtDate, today } from '@/lib/utils'
 
 const EMPTY_FORM = {
   invoiceNo:'', txDate: today(), supplierName:'', notes:'',
-  stockId:'', quantity:'', unitPriceFCY:'', currencyCode:'PKR',
-  exchangeRateUsed:'1', taxRateUsed:'18', freightPKR:'', otherChargesPKR:'',
+  stockId:'', quantity:'',
 }
 
 export default function PurchasesPage() {
@@ -18,8 +17,6 @@ export default function PurchasesPage() {
   const [saving,     setSaving]     = useState(false)
   const [error,      setError]      = useState('')
   const [stocks,     setStocks]     = useState([])
-  const [currencies, setCurrencies] = useState([])
-  const [taxRates,   setTaxRates]   = useState([])
   const [q,          setQ]          = useState('')
 
   const load = useCallback(() => {
@@ -31,20 +28,9 @@ export default function PurchasesPage() {
   useEffect(() => { load() }, [load])
   useEffect(() => {
     fetch('/api/stock').then(r => r.json()).then(setStocks)
-    fetch('/api/currencies').then(r => r.json()).then(setCurrencies)
-    fetch('/api/taxrates').then(r => r.json()).then(setTaxRates)
   }, [])
 
   function f(k) { return { value: form[k] ?? '', onChange: e => setForm(p => ({ ...p, [k]: e.target.value })), className: 'field-input' } }
-
-  const totals = calcTotal({
-    qty:      Number(form.quantity),
-    unitFCY:  Number(form.unitPriceFCY),
-    exRate:   Number(form.exchangeRateUsed) || 1,
-    taxRate:  Number(form.taxRateUsed),
-    freight:  Number(form.freightPKR),
-    other:    Number(form.otherChargesPKR),
-  })
 
   async function genInvoice() {
     const r = await fetch('/api/invoice?type=Purchase')
@@ -52,21 +38,11 @@ export default function PurchasesPage() {
     setForm(p => ({ ...p, invoiceNo: d.invoiceNo }))
   }
 
-  function pickCurrency(code) {
-    const rate = currencies.find(c => c.currencyCode === code)
-    setForm(p => ({ ...p, currencyCode: code, exchangeRateUsed: rate ? rate.exchangeRateToPKR : 1 }))
-  }
-
   function pickStock(id) {
     const s = stocks.find(s => s.stockId === Number(id))
     if (!s) return setForm(p => ({ ...p, stockId: id }))
-    const cur  = s.foreignCurrency || 'PKR'
-    const rate = currencies.find(c => c.currencyCode === cur)
     setForm(p => ({
       ...p, stockId: id,
-      currencyCode:     cur,
-      exchangeRateUsed: rate ? String(rate.exchangeRateToPKR) : '1',
-      unitPriceFCY:     s.foreignCurrencyPrice ? String(s.foreignCurrencyPrice) : '',
       supplierName:     p.supplierName || s.supplier || '',
     }))
   }
@@ -76,11 +52,10 @@ export default function PurchasesPage() {
     if (!form.invoiceNo)   return setError('Generate or enter an Invoice Number')
     if (!form.stockId)     return setError('Select a product')
     if (Number(form.quantity) <= 0) return setError('Quantity must be > 0')
-    if (Number(form.unitPriceFCY) <= 0) return setError('Unit price must be > 0')
     setSaving(true)
     const res = await fetch('/api/purchases', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...form, totalPKR: totals.total }),
+      body: JSON.stringify(form),
     })
     if (!res.ok) { const d = await res.json(); setError(d.error || 'Save failed'); setSaving(false); return }
     setSaving(false); setModal(false); setForm(EMPTY_FORM); load()
@@ -105,11 +80,11 @@ export default function PurchasesPage() {
         <div className="overflow-x-auto">
           <table className="data-table">
             <thead>
-              <tr><th>Invoice</th><th>Date</th><th>Our No.</th><th>Name</th><th>Supplier</th><th className="text-right">Qty</th><th>Currency</th><th className="text-right">Unit FCY</th><th className="text-right">Tax %</th><th className="text-right">Total PKR</th></tr>
+              <tr><th>Invoice</th><th>Date</th><th>Our No.</th><th>Name</th><th>Supplier</th><th className="text-right">Qty</th></tr>
             </thead>
             <tbody>
-              {loading && <tr><td colSpan={10} className="text-center text-slate-500 py-10">Loading…</td></tr>}
-              {!loading && rows.length === 0 && <tr><td colSpan={10} className="text-center text-slate-500 py-10">No purchases yet</td></tr>}
+              {loading && <tr><td colSpan={6} className="text-center text-slate-500 py-10">Loading…</td></tr>}
+              {!loading && rows.length === 0 && <tr><td colSpan={6} className="text-center text-slate-500 py-10">No purchases yet</td></tr>}
               {rows.map(r => (
                 <tr key={r.saleId}>
                   <td className="font-mono text-xs text-sky-600">{r.invoiceNo || '—'}</td>
@@ -118,10 +93,6 @@ export default function PurchasesPage() {
                   <td className="text-xs text-slate-700">{r.stock?.name || r.stock?.description || '—'}</td>
                   <td className="text-slate-600 text-xs">{r.supplierName || '—'}</td>
                   <td className="text-right font-mono text-xs text-slate-700">{r.quantity}</td>
-                  <td className="text-xs text-slate-600">{r.currencyCode}</td>
-                  <td className="text-right font-mono text-xs text-slate-700">{fmt(r.unitPriceFCY)}</td>
-                  <td className="text-right font-mono text-xs text-slate-600">{r.taxRateUsed}%</td>
-                  <td className="text-right font-mono text-sm text-gold">₨ {fmt(r.totalPKR)}</td>
                 </tr>
               ))}
             </tbody>
@@ -158,29 +129,6 @@ export default function PurchasesPage() {
           </div>
 
           <div><label className="field-label">Qty Purchased</label><input {...f('quantity')} type="number" min="1" placeholder="0" /></div>
-          <div><label className="field-label">Unit Price (FCY)</label><input {...f('unitPriceFCY')} type="number" step="0.01" placeholder="0.00" /></div>
-          <div>
-            <label className="field-label">Currency</label>
-            <select value={form.currencyCode} onChange={e => pickCurrency(e.target.value)} className="field-input">
-              {currencies.map(c => <option key={c.rateId} value={c.currencyCode}>{c.currencyCode} – {c.currencyName}</option>)}
-            </select>
-          </div>
-          <div><label className="field-label">Exchange Rate (PKR)</label><input {...f('exchangeRateUsed')} type="number" step="0.01" /></div>
-          <div>
-            <label className="field-label">Tax Rate</label>
-            <select value={form.taxRateUsed} onChange={e => setForm(p => ({ ...p, taxRateUsed: e.target.value }))} className="field-input">
-              {taxRates.map(t => <option key={t.taxRateId} value={t.taxRatePercent}>{t.taxName} ({t.taxRatePercent}%)</option>)}
-            </select>
-          </div>
-          <div><label className="field-label">Freight (PKR)</label><input {...f('freightPKR')} type="number" step="0.01" placeholder="0.00" /></div>
-          <div><label className="field-label">Other Charges (PKR)</label><input {...f('otherChargesPKR')} type="number" step="0.01" placeholder="0.00" /></div>
-
-          {/* Totals summary */}
-          <div className="col-span-2 bg-slate-100 rounded-xl p-4 grid grid-cols-3 gap-4 text-center mt-2">
-            <div><div className="text-slate-700 font-mono text-sm">{form.currencyCode} {fmt(Number(form.quantity) * Number(form.unitPriceFCY))}</div><div className="text-slate-600 text-xs mt-0.5">Subtotal (FCY)</div></div>
-            <div><div className="text-slate-700 font-mono text-sm">₨ {fmt(totals.tax)}</div><div className="text-slate-600 text-xs mt-0.5">Tax (PKR)</div></div>
-            <div><div className="text-gold font-mono font-bold text-lg">₨ {fmt(totals.total)}</div><div className="text-slate-600 text-xs mt-0.5">TOTAL PKR</div></div>
-          </div>
         </div>
         <div className="flex justify-end gap-3 mt-5">
           <button onClick={() => setModal(false)} className="btn-ghost">Cancel</button>

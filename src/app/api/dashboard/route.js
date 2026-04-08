@@ -21,11 +21,11 @@ export async function GET() {
     prisma.stock.count({ where: { quantity: { lte: 5, gt: 0 } } }),
     prisma.sale.aggregate({
       where: { transactionType: 'Sale', txDate: { gte: start, lte: end } },
-      _sum: { totalPKR: true }, _count: true,
+      _count: true,
     }),
     prisma.sale.aggregate({
       where: { transactionType: 'Purchase', txDate: { gte: start, lte: end } },
-      _sum: { totalPKR: true }, _count: true,
+      _count: true,
     }),
     prisma.sale.findMany({
       take: 8, orderBy: { txDate: 'desc' },
@@ -33,8 +33,8 @@ export async function GET() {
     }),
     prisma.sale.groupBy({
       by: ['stockId'], where: { transactionType: 'Sale' },
-      _sum: { quantity: true, totalPKR: true },
-      orderBy: { _sum: { totalPKR: 'desc' } }, take: 5,
+      _sum: { quantity: true },
+      orderBy: { _sum: { quantity: 'desc' } }, take: 5,
     }),
   ])
 
@@ -50,9 +50,7 @@ export async function GET() {
     totalStockItems,
     totalStockQty:      totalStockValue._sum.quantity || 0,
     lowStockItems,
-    monthSalesPKR:      monthSales._sum.totalPKR      || 0,
     monthSalesCount:    monthSales._count,
-    monthPurchasesPKR:  monthPurchases._sum.totalPKR  || 0,
     monthPurchasesCount:monthPurchases._count,
     recentTx,
     topProducts: topProducts.map(t => ({

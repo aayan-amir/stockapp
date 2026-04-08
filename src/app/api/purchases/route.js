@@ -35,13 +35,13 @@ export async function POST(req) {
       stockId:         sid,
       supplierName:    b.supplierName    || null,
       quantity:        qty,
-      unitPriceFCY:    Number(b.unitPriceFCY)    || 0,
-      currencyCode:    b.currencyCode    || 'PKR',
-      exchangeRateUsed:Number(b.exchangeRateUsed)|| 1,
-      taxRateUsed:     Number(b.taxRateUsed)     || 0,
-      freightPKR:      Number(b.freightPKR)      || 0,
-      otherChargesPKR: Number(b.otherChargesPKR) || 0,
-      totalPKR:        Number(b.totalPKR)        || 0,
+      unitPriceFCY:    0,
+      currencyCode:    'PKR',
+      exchangeRateUsed:1,
+      taxRateUsed:     0,
+      freightPKR:      0,
+      otherChargesPKR: 0,
+      totalPKR:        0,
       notes:           b.notes || null,
     },
   })
@@ -55,14 +55,10 @@ export async function POST(req) {
     WHERE "stockId" = ${sid}
   `)
 
-  if (Number(b.unitPriceFCY) > 0) {
+  if (b.supplierName) {
     await prisma.stock.update({
       where: { stockId: sid },
-      data: {
-        foreignCurrencyPrice: Number(b.unitPriceFCY),
-        foreignCurrency:      b.currencyCode || 'PKR',
-        ...(b.supplierName ? { supplier: b.supplierName } : {}),
-      },
+      data: { supplier: b.supplierName },
     })
   }
 

@@ -4,11 +4,11 @@ A full-stack inventory, purchases, and sales management web app built with **Nex
 
 ## Features
 
-- **Dashboard** — live KPIs: stock value, sales/purchases this month, low-stock alerts
+- **Dashboard** — live KPIs: stock counts, sales/purchases this month, low-stock alerts
 - **Stock Browser** — search, filter, add, and edit product master records
-- **Purchases** — full purchase invoice with auto-generated PO numbers, multi-currency, tax, freight
+- **Purchases** — purchase entries with auto-generated PO numbers and stock movement
 - **Sales** — sales invoices with live stock validation, customer assignment, auto invoice numbers
-- **Ledger** — filterable transaction log (Sales + Purchases) with running PKR totals
+- **Ledger** — filterable transaction log (Sales + Purchases)
 - **Customers** — manage customer records with filer status
 - **Settings** — manage currencies, tax rates, and product categories
 - **Auth** — simple PIN-based login screen (configurable via env)
@@ -51,6 +51,8 @@ DATABASE_URL="file:./stock.db"
 ```
 
 > **Note:** Prisma requires `DATABASE_URL` to be present in `.env` (not `.env.local`). If you ever delete `.env`, copy `.env.example` back to `.env` before running Prisma commands.
+>
+> **Render deploy note:** do not set a custom `NODE_ENV` value (for example `staging`). Leave it as standard `production` for builds and runtime.
 
 ## Project Structure
 
