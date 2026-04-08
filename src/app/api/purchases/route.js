@@ -55,10 +55,10 @@ export async function POST(req) {
     WHERE "stockId" = ${sid}
   `)
 
-  if (b.supplierName) {
+  if (Object.prototype.hasOwnProperty.call(b, 'supplierName') && b.supplierName !== undefined) {
     await prisma.stock.update({
       where: { stockId: sid },
-      data: { supplier: b.supplierName },
+      data: { supplier: b.supplierName || null },
     })
   }
 

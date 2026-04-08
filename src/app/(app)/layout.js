@@ -6,8 +6,8 @@ import { redirect } from 'next/navigation'
 const COOKIE = 'sms_auth'
 const PIN = process.env.ACCESS_PIN || '1234'
 
-export default async function AppLayout({ children }) {
-  const token = (await cookies()).get(COOKIE)?.value
+export default function AppLayout({ children }) {
+  const token = cookies().get(COOKIE)?.value
   if (token !== PIN) redirect('/login')
 
   return (
