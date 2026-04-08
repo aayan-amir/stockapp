@@ -2,7 +2,7 @@ import './globals.css'
 
 export const metadata = {
   title: 'Stock Management System',
-  description: 'Inventory and stock management',
+  description: 'Inventory · Purchases · Sales',
 }
 
 export default function RootLayout({ children }) {
