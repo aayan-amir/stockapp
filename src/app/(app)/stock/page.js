@@ -4,9 +4,9 @@ import PageHeader from '@/components/PageHeader'
 import Modal from '@/components/Modal'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import EmptyState from '@/components/EmptyState'
-import { fmt, fmtDate } from '@/lib/utils'
+import { fmtDate } from '@/lib/utils'
 
-const EMPTY = { typeId:'', ourNo:'', oemNo:'', name:'', stockType:'', description:'', supplier:'', foreignCurrency:'PKR', foreignCurrencyPrice:'' }
+const EMPTY = { typeId:'', ourNo:'', oemNo:'', name:'', stockType:'', description:'', supplier:'' }
 const SEARCH_FIELDS = [
   { value: 'ourNo',       label: 'Our No' },
   { value: 'oemNo',       label: 'OEM No' },
@@ -26,7 +26,6 @@ export default function StockPage() {
   const [form,     setForm]     = useState(EMPTY)
   const [saving,   setSaving]   = useState(false)
   const [delTarget,setDelTarget]= useState(null)
-  const [currencies, setCurrencies] = useState([])
   const [categories, setCategories] = useState([])
 
   const load = useCallback(() => {
@@ -37,12 +36,11 @@ export default function StockPage() {
 
   useEffect(() => { load() }, [load])
   useEffect(() => {
-    fetch('/api/currencies').then(r => r.json()).then(setCurrencies)
     fetch('/api/categories').then(r => r.json()).then(setCategories)
   }, [])
 
   function openNew()     { setEditing(null); setForm(EMPTY); setModal(true) }
-  function openEdit(row) { setEditing(row); setForm({ typeId: row.typeId||'', ourNo: row.ourNo||'', oemNo: row.oemNo||'', name: row.name||'', stockType: row.stockType||'', description: row.description||'', supplier: row.supplier||'', foreignCurrency: row.foreignCurrency||'PKR', foreignCurrencyPrice: row.foreignCurrencyPrice||'' }); setModal(true) }
+  function openEdit(row) { setEditing(row); setForm({ typeId: row.typeId||'', ourNo: row.ourNo||'', oemNo: row.oemNo||'', name: row.name||'', stockType: row.stockType||'', description: row.description||'', supplier: row.supplier||'' }); setModal(true) }
 
   async function handleSave() {
     if (!form.ourNo && !form.description) return alert('Enter at least Our No or Description')
@@ -95,18 +93,15 @@ export default function StockPage() {
               <tr>
                 <th>Our No</th><th>OEM No</th><th>Name</th><th>Category</th><th>Description</th>
                 <th>Supplier</th><th className="text-right">In</th><th className="text-right">Out</th>
-                <th className="text-right">Qty</th><th>Price FCY</th><th>Price PKR</th><th>Updated</th><th></th>
+                <th className="text-right">Qty</th><th>Updated</th><th></th>
               </tr>
             </thead>
             <tbody>
-              {loading && <tr><td colSpan={13} className="text-center text-slate-500 py-10">Loading…</td></tr>}
+              {loading && <tr><td colSpan={11} className="text-center text-slate-500 py-10">Loading…</td></tr>}
               {!loading && rows.length === 0 && (
-                <tr><td colSpan={13}><EmptyState icon="▦" title="No stock items" message="Add a new item to get started" action={<button onClick={openNew} className="btn-gold btn-sm">+ New Item</button>} /></td></tr>
+                <tr><td colSpan={11}><EmptyState icon="▦" title="No stock items" message="Add a new item to get started" action={<button onClick={openNew} className="btn-gold btn-sm">+ New Item</button>} /></td></tr>
               )}
-              {rows.map(row => {
-                const rate = currencies.find(c => c.currencyCode === row.foreignCurrency)
-                const pkrPrice = row.foreignCurrencyPrice && rate ? Number(row.foreignCurrencyPrice) * Number(rate.exchangeRateToPKR) : (row.foreignCurrency === 'PKR' && row.foreignCurrencyPrice ? Number(row.foreignCurrencyPrice) : null)
-                return (
+              {rows.map(row => (
                 <tr key={row.stockId}>
                   <td className="font-mono text-sky-600 text-xs">{row.ourNo || '—'}</td>
                   <td className="text-xs text-slate-600">{row.oemNo || '—'}</td>
@@ -121,20 +116,13 @@ export default function StockPage() {
                       {row.quantity}
                     </span>
                   </td>
-                  <td className="font-mono text-xs text-slate-500">
-                    {row.foreignCurrencyPrice ? `${row.foreignCurrency} ${fmt(row.foreignCurrencyPrice)}` : '—'}
-                  </td>
-                  <td className="font-mono text-xs text-slate-700 font-semibold">
-                    {pkrPrice != null ? `₨ ${fmt(pkrPrice)}` : '—'}
-                  </td>
                   <td className="text-slate-600 text-xs whitespace-nowrap">{fmtDate(row.lastUpdated)}</td>
                   <td className="whitespace-nowrap">
                     <button onClick={() => openEdit(row)} className="text-sky-400 hover:text-sky-600 text-xs mr-3 transition-colors">Edit</button>
                     <button onClick={() => setDelTarget(row)} className="text-danger/40 hover:text-danger text-xs transition-colors">Delete</button>
                   </td>
                 </tr>
-                )
-              })}
+              ))}
             </tbody>
           </table>
         </div>
@@ -163,13 +151,6 @@ export default function StockPage() {
             </select>
           </div>
           <div><label className="field-label">Supplier</label><input {...inp('supplier')} placeholder="Supplier name" /></div>
-          <div>
-            <label className="field-label">Currency</label>
-            <select {...inp('foreignCurrency')} className="field-input">
-              {currencies.map(c => <option key={c.rateId} value={c.currencyCode}>{c.currencyCode} – {c.currencyName}</option>)}
-            </select>
-          </div>
-          <div><label className="field-label">Unit Price (FCY)</label><input {...inp('foreignCurrencyPrice')} type="number" step="0.01" placeholder="0.00" /></div>
           {editing && (
             <div className="col-span-2 bg-slate-100 rounded-lg p-3 grid grid-cols-3 gap-3 text-center">
               {[['Stock In', editing.stockIn], ['Stock Out', editing.stockOut], ['Available', editing.quantity]].map(([l, v]) => (

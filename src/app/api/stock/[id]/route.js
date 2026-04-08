@@ -24,8 +24,6 @@ export async function PUT(req, { params }) {
       stockType:            b.stockType   || null,
       description:          b.description || null,
       supplier:             b.supplier    || null,
-      foreignCurrency:      b.foreignCurrency      || null,
-      foreignCurrencyPrice: b.foreignCurrencyPrice ? Number(b.foreignCurrencyPrice) : null,
     },
   })
   return NextResponse.json(s)
