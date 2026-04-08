@@ -54,7 +54,7 @@ export default function Dashboard() {
         <div className="lg:col-span-2 card overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200">
             <h2 className="font-semibold text-slate-700 text-sm">Recent Transactions</h2>
-            <Link href="/ledger" className="text-sky-400 text-xs hover:text-sky-500 transition-colors">View all →</Link>
+            <Link href="/ledger" className="text-sky-600 text-xs hover:text-sky-700 transition-colors">View all →</Link>
           </div>
           <div className="overflow-x-auto">
             <table className="data-table">
@@ -102,7 +102,7 @@ export default function Dashboard() {
             ))}
           </div>
           <div className="px-5 pb-4 pt-2 border-t border-slate-200">
-            <Link href="/sales" className="text-sky-400 text-xs hover:text-sky-500 transition-colors">All sales →</Link>
+            <Link href="/sales" className="text-sky-600 text-xs hover:text-sky-700 transition-colors">All sales →</Link>
           </div>
         </div>
       </div>

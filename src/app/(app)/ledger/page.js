@@ -66,7 +66,7 @@ export default function LedgerPage() {
           <input value={q} onChange={e => setQ(e.target.value)} onKeyDown={e => e.key === 'Enter' && load()} placeholder="Invoice, product, party…" className="field-input" />
         </div>
         <button onClick={load} className="btn-gold">Filter</button>
-        <button onClick={() => { setType('All'); setFrom(''); setTo(''); setQ('') }} className="btn-ghost text-slate-400">Reset</button>
+        <button onClick={() => { setType('All'); setFrom(''); setTo(''); setQ('') }} className="btn-ghost text-slate-600">Reset</button>
       </div>
 
       {/* Ledger table */}
@@ -89,7 +89,7 @@ export default function LedgerPage() {
                   <td className="text-xs text-slate-600 whitespace-nowrap">{fmtDate(r.txDate)}</td>
                   <td className="max-w-[160px]">
                     <div className="text-xs truncate">{r.stock?.name || r.stock?.description || '—'}</div>
-                    <div className="text-xs text-slate-400 truncate">{r.stock?.ourNo}</div>
+                    <div className="text-xs text-slate-600 truncate">{r.stock?.ourNo}</div>
                   </td>
                   <td className="text-xs text-slate-600">
                     {r.transactionType === 'Sale'

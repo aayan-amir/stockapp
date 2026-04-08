@@ -73,7 +73,7 @@ export default function PurchasesPage() {
       <div className="flex gap-2 mb-5">
         <input value={q} onChange={e => setQ(e.target.value)} onKeyDown={e => e.key === 'Enter' && load()} placeholder="Search invoice, supplier, product…" className="field-input flex-1" />
         <button onClick={load} className="btn-ghost">Search</button>
-        <button onClick={() => setQ('')} className="btn-ghost text-slate-400">Clear</button>
+        <button onClick={() => setQ('')} className="btn-ghost text-slate-600">Clear</button>
       </div>
 
       <div className="card overflow-hidden">

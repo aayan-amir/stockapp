@@ -82,7 +82,7 @@ export default function StockPage() {
           placeholder="Search…" className="field-input flex-1"
         />
         <button onClick={load}        className="btn-ghost">Search</button>
-        <button onClick={() => { setQ(''); }} className="btn-ghost text-slate-400">Clear</button>
+        <button onClick={() => { setQ(''); }} className="btn-ghost text-slate-600">Clear</button>
       </div>
 
       {/* Table */}
@@ -118,8 +118,8 @@ export default function StockPage() {
                   </td>
                   <td className="text-slate-600 text-xs whitespace-nowrap">{fmtDate(row.lastUpdated)}</td>
                   <td className="whitespace-nowrap">
-                    <button onClick={() => openEdit(row)} className="text-sky-400 hover:text-sky-600 text-xs mr-3 transition-colors">Edit</button>
-                    <button onClick={() => setDelTarget(row)} className="text-danger/40 hover:text-danger text-xs transition-colors">Delete</button>
+                    <button onClick={() => openEdit(row)} className="text-sky-600 hover:text-sky-700 text-xs mr-3 transition-colors">Edit</button>
+                    <button onClick={() => setDelTarget(row)} className="text-danger/80 hover:text-danger text-xs transition-colors">Delete</button>
                   </td>
                 </tr>
               ))}
@@ -154,7 +154,7 @@ export default function StockPage() {
           {editing && (
             <div className="col-span-2 bg-slate-100 rounded-lg p-3 grid grid-cols-3 gap-3 text-center">
               {[['Stock In', editing.stockIn], ['Stock Out', editing.stockOut], ['Available', editing.quantity]].map(([l, v]) => (
-                <div key={l}><div className="text-gold font-mono font-bold">{v}</div><div className="text-accent/50 text-xs mt-0.5">{l}</div></div>
+                <div key={l}><div className="text-gold font-mono font-bold">{v}</div><div className="text-accent-dim text-xs mt-0.5">{l}</div></div>
               ))}
             </div>
           )}

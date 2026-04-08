@@ -50,7 +50,7 @@ export default function CustomersPage() {
       <div className="flex gap-2 mb-5">
         <input value={q} onChange={e => setQ(e.target.value)} onKeyDown={e => e.key === 'Enter' && load()} placeholder="Search by name…" className="field-input flex-1" />
         <button onClick={load} className="btn-ghost">Search</button>
-        <button onClick={() => setQ('')} className="btn-ghost text-slate-400">Clear</button>
+        <button onClick={() => setQ('')} className="btn-ghost text-slate-600">Clear</button>
       </div>
 
       <div className="card overflow-hidden">
@@ -69,7 +69,7 @@ export default function CustomersPage() {
                   <td className="text-slate-600 text-xs max-w-[200px] truncate">{r.address || '—'}</td>
                   <td className="whitespace-nowrap">
                     <button onClick={() => openEdit(r)} className="text-sky-600 hover:text-sky-700 text-xs mr-3 transition-colors">Edit</button>
-                    <button onClick={() => setDelTarget(r)} className="text-danger/60 hover:text-danger text-xs transition-colors">Delete</button>
+                    <button onClick={() => setDelTarget(r)} className="text-danger/80 hover:text-danger text-xs transition-colors">Delete</button>
                   </td>
                 </tr>
               ))}
