@@ -9,7 +9,7 @@
     "start": "npm run env:ensure && next start",
     "db:push": "prisma db push",
     "db:seed": "node prisma/seed.js",
-    "db:init": "npm run env:ensure && npx prisma db push && npx prisma generate && npm run db:seed",
+    "db:init": "npm run env:ensure && node scripts/db-init.js",
     "setup": "npm run env:ensure && npm install && npm run db:init"
   },
   "dependencies": {
