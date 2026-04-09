@@ -23,10 +23,13 @@ function ensureParentWritable(filePath) {
   try {
     fs.mkdirSync(parentDir, { recursive: true });
     fs.accessSync(parentDir, fs.constants.W_OK);
-    return true;
+    return { writable: true };
   } catch (error) {
-    if (error.code === "EROFS" || error.code === "EACCES") {
-      return false;
+    if (error.code === "EROFS") {
+      return { writable: false, reason: "EROFS" };
+    }
+    if (error.code === "EACCES") {
+      return { writable: false, reason: "EACCES" };
     }
     throw error;
   }
@@ -34,11 +37,20 @@ function ensureParentWritable(filePath) {
 
 const sqlitePath = resolveSqlitePath(process.env.DATABASE_URL);
 const sqliteParentDir = sqlitePath ? path.dirname(sqlitePath) : null;
+const parentWriteCheck = sqlitePath ? ensureParentWritable(sqlitePath) : null;
 
-if (sqlitePath && !ensureParentWritable(sqlitePath)) {
-  console.warn(
-    `[db:init] Skipping prisma db push/seed because SQLite parent directory is not writable: ${sqliteParentDir}`
-  );
+if (sqlitePath && parentWriteCheck && !parentWriteCheck.writable) {
+  const reasonMessage =
+    parentWriteCheck.reason === "EACCES"
+      ? "permission denied (EACCES)"
+      : "read-only filesystem (EROFS)";
+  console.warn(`[db:init] SQLite parent directory is not writable (${reasonMessage}): ${sqliteParentDir}`);
+  if (!fs.existsSync(sqlitePath)) {
+    console.warn(
+      `[db:init] SQLite database file does not exist at ${sqlitePath}. The app may fail at runtime unless the database is created on a writable mount.`
+    );
+  }
+  console.warn("[db:init] Skipping prisma db push/seed and running prisma generate only.");
   run("npx prisma generate");
   process.exit(0);
 }
