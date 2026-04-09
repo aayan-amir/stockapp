@@ -42,14 +42,13 @@ const sqliteParentDir = sqlitePath ? path.dirname(sqlitePath) : null;
 const parentWriteCheck = sqlitePath ? ensureParentWritable(sqlitePath) : null;
 
 if (sqlitePath && parentWriteCheck && !parentWriteCheck.writable) {
-  const reasonMessage =
-    parentWriteCheck.reason === "EACCES"
-      ? "permission denied (EACCES)"
-      : parentWriteCheck.reason === "EPERM"
-        ? "operation not permitted (EPERM)"
-        : parentWriteCheck.reason === "ENOENT"
-          ? "parent path not found (ENOENT)"
-          : "read-only filesystem (EROFS)";
+  const reasonMessages = {
+    EACCES: "permission denied (EACCES)",
+    EPERM: "operation not permitted (EPERM)",
+    ENOENT: "parent path not found (ENOENT)",
+    EROFS: "read-only filesystem (EROFS)",
+  };
+  const reasonMessage = reasonMessages[parentWriteCheck.reason] || parentWriteCheck.reason;
   console.warn(`[db:init] SQLite parent directory is not writable (${reasonMessage}): ${sqliteParentDir}`);
   if (!fs.existsSync(sqlitePath)) {
     console.warn(
