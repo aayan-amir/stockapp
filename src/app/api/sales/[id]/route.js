@@ -14,21 +14,21 @@ export async function DELETE(_, { params }) {
 
   if (sid) {
     if (row.transactionType === 'Sale') {
-      await prisma.$executeRawUnsafe(`
+      await prisma.$executeRaw`
         UPDATE "Stock"
-        SET "stockOut" = max(0,"stockOut"-${qty}),
-            "quantity" = "stockIn" - max(0,"stockOut"-${qty}),
-            "lastUpdated" = datetime('now')
+        SET "stockOut" = GREATEST(0, "stockOut" - ${qty}),
+            "quantity" = "stockIn" - GREATEST(0, "stockOut" - ${qty}),
+            "lastUpdated" = NOW()
         WHERE "stockId" = ${sid}
-      `)
+      `
     } else {
-      await prisma.$executeRawUnsafe(`
+      await prisma.$executeRaw`
         UPDATE "Stock"
-        SET "stockIn"  = max(0,"stockIn"-${qty}),
-            "quantity" = max(0,"stockIn"-${qty}) - "stockOut",
-            "lastUpdated" = datetime('now')
+        SET "stockIn"  = GREATEST(0, "stockIn" - ${qty}),
+            "quantity" = GREATEST(0, "stockIn" - ${qty}) - "stockOut",
+            "lastUpdated" = NOW()
         WHERE "stockId" = ${sid}
-      `)
+      `
     }
   }
   return NextResponse.json({ ok: true })

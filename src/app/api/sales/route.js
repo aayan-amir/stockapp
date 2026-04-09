@@ -52,13 +52,13 @@ export async function POST(req) {
     },
   })
 
-  await prisma.$executeRawUnsafe(`
+  await prisma.$executeRaw`
     UPDATE "Stock"
     SET "stockOut" = "stockOut" + ${qty},
         "quantity" = "stockIn"  - ("stockOut" + ${qty}),
-        "lastUpdated" = datetime('now')
+        "lastUpdated" = NOW()
     WHERE "stockId" = ${sid}
-  `)
+  `
 
   return NextResponse.json(row, { status: 201 })
 }
