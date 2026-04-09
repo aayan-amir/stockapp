@@ -15,7 +15,7 @@ export async function GET() {
     monthPurchases,
     recentTx,
     topProducts,
-  ] = await Promise.all([
+  ] = await prisma.$transaction([
     prisma.stock.count(),
     prisma.stock.aggregate({ _sum: { quantity: true } }),
     prisma.stock.count({ where: { quantity: { lte: 5, gt: 0 } } }),
