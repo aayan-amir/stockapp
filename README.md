@@ -1,6 +1,6 @@
 # Stock Management System
 
-A full-stack inventory, purchases, and sales management web app built with **Next.js 14**, **Prisma**, **SQLite**, and **Tailwind CSS**. Converted from a Microsoft Access VBA module.
+A full-stack inventory, purchases, and sales management web app built with **Next.js 14**, **Prisma**, **PostgreSQL (Supabase)**, and **Tailwind CSS**. Converted from a Microsoft Access VBA module.
 
 ## Features
 
@@ -19,7 +19,7 @@ A full-stack inventory, purchases, and sales management web app built with **Nex
 |------------|-------------------------------|
 | Framework  | Next.js 14 (App Router)       |
 | ORM        | Prisma                        |
-| Database   | SQLite (file: `prisma/stock.db`) |
+| Database   | Supabase PostgreSQL |
 | Styling    | Tailwind CSS                  |
 | Fonts      | DM Sans + DM Mono (Google Fonts) |
 
@@ -46,15 +46,15 @@ ACCESS_PIN=1234
 # Next Auth secret (generate with: openssl rand -base64 32)
 NEXTAUTH_SECRET=replace-with-a-long-random-string
 
-# Database (SQLite — path relative to prisma/)
-DATABASE_URL="file:./stock.db"
+# Database (Supabase Postgres direct connection string)
+DATABASE_URL="postgresql://postgres:<PASSWORD>@db.<PROJECT-REF>.supabase.co:5432/postgres?sslmode=require"
 ```
 
 > **Note:** Prisma requires `DATABASE_URL` to be present in `.env` (not `.env.local`). If you ever delete `.env`, copy `.env.example` back to `.env` before running Prisma commands.
 >
 > **Render deploy note:** do not set a custom `NODE_ENV` value (for example `staging`). Leave it as standard `production` for builds and runtime.
 >
-> **Render SQLite note:** if `DATABASE_URL="file:/var/data/stock.db"`, Render build containers may be read-only. Keep build command as `npm run build`. The default `npm start` command already runs `db:init` before `next start`, so schema push/seed happen on the writable runtime volume.
+> **Render + Supabase note:** set `DATABASE_URL` to your **direct** Supabase Postgres connection string. Keep build command as `npm run build`; the default `npm start` runs `db:init` before `next start` to apply schema and seed data.
 
 ## Project Structure
 
@@ -84,5 +84,5 @@ npm run dev          # Start development server
 npm run build        # Production build
 npm run start        # Init DB then start production server
 npm run setup        # One-time install + db init
-npm run db:init      # Push schema + seed data (skips push/seed on read-only SQLite parent dirs)
+npm run db:init      # Push schema + generate client + seed data
 ```
