@@ -47,13 +47,13 @@ export async function POST(req) {
   })
 
   // Atomic stock update
-  await prisma.$executeRawUnsafe(`
+  await prisma.$executeRaw`
     UPDATE "Stock"
     SET "stockIn"  = "stockIn" + ${qty},
         "quantity" = "stockIn" + ${qty} - "stockOut",
-        "lastUpdated" = datetime('now')
+        "lastUpdated" = NOW()
     WHERE "stockId" = ${sid}
-  `)
+  `
 
   if (Object.prototype.hasOwnProperty.call(b, 'supplierName') && b.supplierName !== undefined) {
     await prisma.stock.update({
