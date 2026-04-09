@@ -54,7 +54,7 @@ DATABASE_URL="file:./stock.db"
 >
 > **Render deploy note:** do not set a custom `NODE_ENV` value (for example `staging`). Leave it as standard `production` for builds and runtime.
 >
-> **Render SQLite note:** if `DATABASE_URL="file:/var/data/stock.db"`, Render build containers may be read-only. Keep build command as `npm run build`. In Render's single **Start Command** field, run DB initialization where `/var/data` is writable (for example: `npm run db:init && next start -H 0.0.0.0`).
+> **Render SQLite note:** if `DATABASE_URL="file:/var/data/stock.db"`, Render build containers may be read-only. Keep build command as `npm run build`. The default `npm start` command already runs `db:init` before `next start`, so schema push/seed happen on the writable runtime volume.
 
 ## Project Structure
 
@@ -82,6 +82,7 @@ stockapp/
 ```bash
 npm run dev          # Start development server
 npm run build        # Production build
+npm run start        # Init DB then start production server
 npm run setup        # One-time install + db init
 npm run db:init      # Push schema + seed data (skips push/seed on read-only SQLite parent dirs)
 ```
