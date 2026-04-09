@@ -46,15 +46,15 @@ ACCESS_PIN=1234
 # Next Auth secret (generate with: openssl rand -base64 32)
 NEXTAUTH_SECRET=replace-with-a-long-random-string
 
-# Database (Supabase Postgres direct connection string)
-DATABASE_URL="postgresql://postgres:<PASSWORD>@db.<PROJECT-REF>.supabase.co:5432/postgres?sslmode=require"
+# Database (Supabase Shared Pooler for IPv4 networks; use Direct Connection on IPv6)
+DATABASE_URL="postgresql://postgres.<PROJECT-REF>:<PASSWORD>@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres?sslmode=require"
 ```
 
 > **Note:** Prisma requires `DATABASE_URL` to be present in `.env` (not `.env.local`). If you ever delete `.env`, copy `.env.example` back to `.env` before running Prisma commands.
 >
 > **Render deploy note:** do not set a custom `NODE_ENV` value (for example `staging`). Leave it as standard `production` for builds and runtime.
 >
-> **Render + Supabase note:** set `DATABASE_URL` to your **direct** Supabase Postgres connection string. Keep build command as `npm run build`; the default `npm start` runs `db:init` before `next start` to apply schema and seed data.
+> **Render + Supabase note:** set `DATABASE_URL` to your Supabase **Shared Pooler** connection string when running on IPv4 networks (or use the **Direct Connection** string on IPv6). Keep build command as `npm run build`; the default `npm start` runs `db:init` before `next start` to apply schema and seed data.
 
 ## Project Structure
 
