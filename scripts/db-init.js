@@ -53,9 +53,25 @@ function normalizeSqliteUrl(databaseUrl) {
   const [rawPath, ...queryParts] = raw.split("?");
   if (!rawPath) return { value: databaseUrl, normalized: false };
 
+  if (
+    rawPath.startsWith("/") ||
+    rawPath.startsWith("./") ||
+    rawPath.startsWith("../") ||
+    /^[A-Za-z]:[\\/]/.test(rawPath)
+  ) {
+    return { value: databaseUrl, normalized: false };
+  }
+
   const querySuffix = queryParts.length > 0 ? `?${queryParts.join("?")}` : "";
+  const firstSegment = rawPath.split("/")[0];
+  let unixRootDirectories = new Set();
+  try {
+    unixRootDirectories = new Set(fs.readdirSync("/"));
+  } catch (_error) {
+    unixRootDirectories = new Set();
+  }
   const shouldNormalizeAbsoluteMissingSlash =
-    rawPath.startsWith("var/") || rawPath.startsWith("tmp/") || rawPath.startsWith("home/");
+    rawPath.includes("/") && unixRootDirectories.has(firstSegment);
 
   if (!shouldNormalizeAbsoluteMissingSlash) {
     return { value: databaseUrl, normalized: false };
@@ -93,6 +109,7 @@ function ensureParentWritable(filePath) {
 
 function ensureFileExists(filePath) {
   try {
+    // Touch file if missing (or verify openability if it exists) before Prisma connects.
     fs.closeSync(fs.openSync(filePath, "a"));
     return { ok: true };
   } catch (error) {
