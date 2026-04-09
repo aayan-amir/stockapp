@@ -11,6 +11,13 @@ const reasonMessages = {
   ENOENT: "parent path not found (ENOENT)",
   EROFS: "read-only filesystem (EROFS)",
 };
+const ROOT_DIR_NAMES = (() => {
+  try {
+    return new Set(fs.readdirSync("/"));
+  } catch (_error) {
+    return new Set();
+  }
+})();
 
 function run(command) {
   try {
@@ -71,15 +78,8 @@ function normalizeSqliteUrl(databaseUrl) {
 
   const querySuffix = queryParts.length > 0 ? `?${queryParts.join("?")}` : "";
   const firstSegment = rawPath.split("/")[0];
-  const rootDirNames = (() => {
-    try {
-      return new Set(fs.readdirSync("/"));
-    } catch (_error) {
-      return new Set();
-    }
-  })();
   const shouldNormalizeAbsoluteMissingSlash =
-    rawPath.includes("/") && rootDirNames.has(firstSegment);
+    rawPath.includes("/") && ROOT_DIR_NAMES.has(firstSegment);
 
   if (!shouldNormalizeAbsoluteMissingSlash) {
     return { value: databaseUrl, normalized: false };
@@ -117,7 +117,7 @@ function ensureParentWritable(filePath) {
 
 function ensureFileExists(filePath) {
   try {
-    // Touch file if missing (or verify it can be opened if it exists) before Prisma connects.
+    // Create file if missing (or verify it can be opened if it exists) before Prisma connects.
     fs.closeSync(fs.openSync(filePath, "a"));
     return { ok: true };
   } catch (error) {
