@@ -71,12 +71,13 @@ function normalizeSqliteUrl(databaseUrl) {
 
   const querySuffix = queryParts.length > 0 ? `?${queryParts.join("?")}` : "";
   const firstSegment = rawPath.split("/")[0];
-  let rootDirNames = new Set();
-  try {
-    rootDirNames = new Set(fs.readdirSync("/"));
-  } catch (_error) {
-    rootDirNames = new Set();
-  }
+  const rootDirNames = (() => {
+    try {
+      return new Set(fs.readdirSync("/"));
+    } catch (_error) {
+      return new Set();
+    }
+  })();
   const shouldNormalizeAbsoluteMissingSlash =
     rawPath.includes("/") && rootDirNames.has(firstSegment);
 
@@ -116,7 +117,7 @@ function ensureParentWritable(filePath) {
 
 function ensureFileExists(filePath) {
   try {
-    // Touch file if missing (or verify openability if it exists) before Prisma connects.
+    // Touch file if missing (or verify it can be opened if it exists) before Prisma connects.
     fs.closeSync(fs.openSync(filePath, "a"));
     return { ok: true };
   } catch (error) {
@@ -128,6 +129,7 @@ function ensureFileExists(filePath) {
 }
 
 const envFromFile = readEnvFile(envFilePath);
+// Precedence: explicit process env overrides .env file value.
 const originalDatabaseUrl = process.env.DATABASE_URL || envFromFile.DATABASE_URL;
 const normalizedUrlResult = normalizeSqliteUrl(originalDatabaseUrl);
 const databaseUrl = normalizedUrlResult.value;
