@@ -25,7 +25,7 @@ function ensureParentWritable(filePath) {
     fs.accessSync(parentDir, fs.constants.W_OK);
     return true;
   } catch (error) {
-    if (error && (error.code === "EROFS" || error.code === "EACCES")) {
+    if (error.code === "EROFS" || error.code === "EACCES") {
       return false;
     }
     throw error;
@@ -40,6 +40,12 @@ if (sqlitePath && !ensureParentWritable(sqlitePath)) {
   );
   run("npx prisma generate");
   process.exit(0);
+}
+
+if (!sqlitePath) {
+  console.log(
+    "[db:init] DATABASE_URL is not a SQLite file URL; running standard prisma db push + generate + seed."
+  );
 }
 
 run("npx prisma db push");
