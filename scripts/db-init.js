@@ -4,6 +4,13 @@ const { execSync } = require("child_process");
 
 const prismaDir = path.resolve(process.cwd(), "prisma");
 const envFilePath = path.resolve(process.cwd(), ".env");
+const NON_WRITABLE_FS_ERROR_CODES = ["EROFS", "EACCES", "EPERM", "ENOENT"];
+const reasonMessages = {
+  EACCES: "permission denied (EACCES)",
+  EPERM: "operation not permitted (EPERM)",
+  ENOENT: "parent path not found (ENOENT)",
+  EROFS: "read-only filesystem (EROFS)",
+};
 
 function run(command) {
   try {
@@ -64,14 +71,14 @@ function normalizeSqliteUrl(databaseUrl) {
 
   const querySuffix = queryParts.length > 0 ? `?${queryParts.join("?")}` : "";
   const firstSegment = rawPath.split("/")[0];
-  let unixRootDirectories = new Set();
+  let rootDirNames = new Set();
   try {
-    unixRootDirectories = new Set(fs.readdirSync("/"));
+    rootDirNames = new Set(fs.readdirSync("/"));
   } catch (_error) {
-    unixRootDirectories = new Set();
+    rootDirNames = new Set();
   }
   const shouldNormalizeAbsoluteMissingSlash =
-    rawPath.includes("/") && unixRootDirectories.has(firstSegment);
+    rawPath.includes("/") && rootDirNames.has(firstSegment);
 
   if (!shouldNormalizeAbsoluteMissingSlash) {
     return { value: databaseUrl, normalized: false };
@@ -100,7 +107,7 @@ function ensureParentWritable(filePath) {
     fs.accessSync(parentDir, fs.constants.W_OK);
     return { writable: true };
   } catch (error) {
-    if (["EROFS", "EACCES", "EPERM", "ENOENT"].includes(error.code)) {
+    if (NON_WRITABLE_FS_ERROR_CODES.includes(error.code)) {
       return { writable: false, reason: error.code };
     }
     throw error;
@@ -113,7 +120,7 @@ function ensureFileExists(filePath) {
     fs.closeSync(fs.openSync(filePath, "a"));
     return { ok: true };
   } catch (error) {
-    if (["EROFS", "EACCES", "EPERM", "ENOENT"].includes(error.code)) {
+    if (NON_WRITABLE_FS_ERROR_CODES.includes(error.code)) {
       return { ok: false, reason: error.code };
     }
     throw error;
@@ -140,12 +147,6 @@ const sqliteParentDir = sqlitePath ? path.dirname(sqlitePath) : null;
 const parentWriteCheck = sqlitePath ? ensureParentWritable(sqlitePath) : null;
 
 if (sqlitePath && parentWriteCheck && !parentWriteCheck.writable) {
-  const reasonMessages = {
-    EACCES: "permission denied (EACCES)",
-    EPERM: "operation not permitted (EPERM)",
-    ENOENT: "parent path not found (ENOENT)",
-    EROFS: "read-only filesystem (EROFS)",
-  };
   const reasonMessage = reasonMessages[parentWriteCheck.reason] || parentWriteCheck.reason;
   console.warn(`[db:init] SQLite parent directory is not writable (${reasonMessage}): ${sqliteParentDir}`);
   if (!fs.existsSync(sqlitePath)) {
@@ -169,12 +170,6 @@ if (!sqlitePath) {
 } else {
   const fileCheck = ensureFileExists(sqlitePath);
   if (!fileCheck.ok) {
-    const reasonMessages = {
-      EACCES: "permission denied (EACCES)",
-      EPERM: "operation not permitted (EPERM)",
-      ENOENT: "parent path not found (ENOENT)",
-      EROFS: "read-only filesystem (EROFS)",
-    };
     const reasonMessage = reasonMessages[fileCheck.reason] || fileCheck.reason;
     console.error(
       `[db:init] Failed to ensure SQLite file exists at ${sqlitePath} (${reasonMessage}). Refusing to start to prevent runtime open-file failures.`
