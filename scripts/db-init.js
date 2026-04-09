@@ -5,7 +5,12 @@ const { execSync } = require("child_process");
 const prismaDir = path.resolve(process.cwd(), "prisma");
 
 function run(command) {
-  execSync(command, { stdio: "inherit" });
+  try {
+    execSync(command, { stdio: "inherit" });
+  } catch (error) {
+    console.error(`[db:init] Command failed: ${command}`);
+    throw error;
+  }
 }
 
 function resolveSqlitePath(databaseUrl) {
