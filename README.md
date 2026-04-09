@@ -53,6 +53,8 @@ DATABASE_URL="file:./stock.db"
 > **Note:** Prisma requires `DATABASE_URL` to be present in `.env` (not `.env.local`). If you ever delete `.env`, copy `.env.example` back to `.env` before running Prisma commands.
 >
 > **Render deploy note:** do not set a custom `NODE_ENV` value (for example `staging`). Leave it as standard `production` for builds and runtime.
+>
+> **Render SQLite note:** if `DATABASE_URL="file:/var/data/stock.db"`, Render build containers may be read-only. Keep build command as `npm run build`; run DB initialization at runtime (`npm run db:init`) where `/var/data` is writable.
 
 ## Project Structure
 
@@ -81,5 +83,5 @@ stockapp/
 npm run dev          # Start development server
 npm run build        # Production build
 npm run setup        # One-time install + db init
-npm run db:init      # Push schema + seed data (when needed)
+npm run db:init      # Push schema + seed data (skips push/seed on read-only SQLite parent dirs)
 ```
