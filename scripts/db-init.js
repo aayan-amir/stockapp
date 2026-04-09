@@ -30,11 +30,8 @@ function ensureParentWritable(filePath) {
     fs.accessSync(parentDir, fs.constants.W_OK);
     return { writable: true };
   } catch (error) {
-    if (error.code === "EROFS") {
-      return { writable: false, reason: "EROFS" };
-    }
-    if (error.code === "EACCES") {
-      return { writable: false, reason: "EACCES" };
+    if (["EROFS", "EACCES", "EPERM", "ENOENT"].includes(error.code)) {
+      return { writable: false, reason: error.code };
     }
     throw error;
   }
@@ -48,7 +45,11 @@ if (sqlitePath && parentWriteCheck && !parentWriteCheck.writable) {
   const reasonMessage =
     parentWriteCheck.reason === "EACCES"
       ? "permission denied (EACCES)"
-      : "read-only filesystem (EROFS)";
+      : parentWriteCheck.reason === "EPERM"
+        ? "operation not permitted (EPERM)"
+        : parentWriteCheck.reason === "ENOENT"
+          ? "parent path not found (ENOENT)"
+          : "read-only filesystem (EROFS)";
   console.warn(`[db:init] SQLite parent directory is not writable (${reasonMessage}): ${sqliteParentDir}`);
   if (!fs.existsSync(sqlitePath)) {
     console.warn(
