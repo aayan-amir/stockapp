@@ -54,7 +54,7 @@ DATABASE_URL="file:./stock.db"
 >
 > **Render deploy note:** do not set a custom `NODE_ENV` value (for example `staging`). Leave it as standard `production` for builds and runtime.
 >
-> **Render SQLite note:** if `DATABASE_URL="file:/var/data/stock.db"`, Render build containers may be read-only. Keep build command as `npm run build`. Configure runtime to initialize the DB where `/var/data` is writable (for example, start command: `npm run db:init && npm run start`).
+> **Render SQLite note:** if `DATABASE_URL="file:/var/data/stock.db"`, Render build containers may be read-only. Keep build command as `npm run build`. In Render's single **Start Command** field, run DB initialization where `/var/data` is writable (for example: `npm run db:init && npm run start`).
 
 ## Project Structure
 

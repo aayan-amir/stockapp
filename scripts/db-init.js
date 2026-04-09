@@ -33,10 +33,11 @@ function ensureParentWritable(filePath) {
 }
 
 const sqlitePath = resolveSqlitePath(process.env.DATABASE_URL);
+const sqliteParentDir = sqlitePath ? path.dirname(sqlitePath) : null;
 
 if (sqlitePath && !ensureParentWritable(sqlitePath)) {
   console.warn(
-    `[db:init] Skipping prisma db push/seed because SQLite parent directory is not writable: ${path.dirname(sqlitePath)}`
+    `[db:init] Skipping prisma db push/seed because SQLite parent directory is not writable: ${sqliteParentDir}`
   );
   run("npx prisma generate");
   process.exit(0);
