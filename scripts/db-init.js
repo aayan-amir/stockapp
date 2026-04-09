@@ -61,8 +61,12 @@ if (sqlitePath && parentWriteCheck && !parentWriteCheck.writable) {
 }
 
 if (!sqlitePath) {
+  const databaseUrl = process.env.DATABASE_URL;
+  const reason = databaseUrl
+    ? `DATABASE_URL is non-SQLite (${databaseUrl.split(":")[0]} protocol)`
+    : "DATABASE_URL is not set";
   console.log(
-    "[db:init] DATABASE_URL is not a SQLite file URL; running standard prisma db push + generate + seed."
+    `[db:init] ${reason}; running standard prisma db push + generate + seed.`
   );
 }
 
