@@ -11,13 +11,17 @@ const reasonMessages = {
   ENOENT: "parent path not found (ENOENT)",
   EROFS: "read-only filesystem (EROFS)",
 };
-const ROOT_DIR_NAMES = (() => {
+let rootDirNamesCache = null;
+
+function getRootDirNames() {
+  if (rootDirNamesCache) return rootDirNamesCache;
   try {
-    return new Set(fs.readdirSync("/"));
+    rootDirNamesCache = new Set(fs.readdirSync("/"));
   } catch (_error) {
-    return new Set();
+    rootDirNamesCache = new Set();
   }
-})();
+  return rootDirNamesCache;
+}
 
 function run(command) {
   try {
@@ -79,7 +83,7 @@ function normalizeSqliteUrl(databaseUrl) {
   const querySuffix = queryParts.length > 0 ? `?${queryParts.join("?")}` : "";
   const firstSegment = rawPath.split("/")[0];
   const shouldNormalizeAbsoluteMissingSlash =
-    rawPath.includes("/") && ROOT_DIR_NAMES.has(firstSegment);
+    rawPath.includes("/") && getRootDirNames().has(firstSegment);
 
   if (!shouldNormalizeAbsoluteMissingSlash) {
     return { value: databaseUrl, normalized: false };
@@ -117,7 +121,7 @@ function ensureParentWritable(filePath) {
 
 function ensureFileExists(filePath) {
   try {
-    // Create file if missing (or verify it can be opened if it exists) before Prisma connects.
+    // "a" creates the file if missing and opens without truncating if it already exists.
     fs.closeSync(fs.openSync(filePath, "a"));
     return { ok: true };
   } catch (error) {
@@ -130,7 +134,7 @@ function ensureFileExists(filePath) {
 
 const envFromFile = readEnvFile(envFilePath);
 // Precedence: explicit process env overrides .env file value.
-const originalDatabaseUrl = process.env.DATABASE_URL || envFromFile.DATABASE_URL;
+const originalDatabaseUrl = process.env.DATABASE_URL ?? envFromFile.DATABASE_URL;
 const normalizedUrlResult = normalizeSqliteUrl(originalDatabaseUrl);
 const databaseUrl = normalizedUrlResult.value;
 
