@@ -22,6 +22,7 @@ export default function SalesPage() {
   const [selStock,   setSelStock]  = useState(null)   // full stock record
   const [q,          setQ]         = useState('')
   const [delTarget,  setDelTarget] = useState(null)
+  const [editing,    setEditing]   = useState(null)   // null = new
 
   const load = useCallback(() => {
     setLoading(true)
@@ -31,7 +32,7 @@ export default function SalesPage() {
 
   useEffect(() => { load() }, [load])
   useEffect(() => {
-    fetch('/api/stock').then(r => r.json()).then(d => setStocks(d.filter(s => s.quantity > 0)))
+    fetch('/api/stock').then(r => r.json()).then(d => setStocks(d))
     fetch('/api/customers').then(r => r.json()).then(setCustomers)
   }, [])
 
@@ -43,6 +44,34 @@ export default function SalesPage() {
     setForm(p => ({ ...p, stockId: id }))
   }
 
+  function openNew() {
+    setEditing(null)
+    setForm(EMPTY)
+    setSelStock(null)
+    setError('')
+    setModal(true)
+    // Reset stock list to in-stock only for new sales
+    fetch('/api/stock').then(r => r.json()).then(d => setStocks(d.filter(s => s.quantity > 0)))
+  }
+
+  function openEdit(row) {
+    setEditing(row)
+    const s = stocks.find(s => s.stockId === row.stockId) || row.stock || null
+    setSelStock(s)
+    setForm({
+      invoiceNo:  row.invoiceNo  || '',
+      txDate:     row.txDate ? row.txDate.slice(0, 10) : today(),
+      customerId: row.customerId ? String(row.customerId) : '',
+      notes:      row.notes      || '',
+      stockId:    String(row.stockId || ''),
+      quantity:   String(row.quantity || ''),
+    })
+    setError('')
+    // For editing, show all stocks so the current product is selectable
+    fetch('/api/stock').then(r => r.json()).then(setStocks)
+    setModal(true)
+  }
+
   async function genInvoice() {
     const r = await fetch('/api/invoice?type=Sale')
     const d = await r.json()
@@ -51,26 +80,44 @@ export default function SalesPage() {
 
   async function handleSave() {
     setError('')
-    if (!form.invoiceNo)           return setError('Generate or enter an Invoice Number')
-    if (!form.stockId)             return setError('Select a product')
+    if (!form.invoiceNo)            return setError('Generate or enter an Invoice Number')
+    if (!form.stockId)              return setError('Select a product')
     if (Number(form.quantity) <= 0) return setError('Enter quantity to sell')
-    if (!selStock)                 return setError('Product not found')
-    if (Number(form.quantity) > selStock.quantity) return setError(`Only ${selStock.quantity} unit(s) available`)
+
+    // For new sales, enforce stock availability client-side
+    if (!editing) {
+      if (!selStock)                                          return setError('Product not found')
+      if (Number(form.quantity) > selStock.quantity)         return setError(`Only ${selStock.quantity} unit(s) available`)
+    }
 
     setSaving(true)
-    const res = await fetch('/api/sales', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+    const url    = editing ? `/api/sales/${editing.saleId}` : '/api/sales'
+    const method = editing ? 'PUT' : 'POST'
+    const res = await fetch(url, {
+      method, headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(form),
     })
-    if (!res.ok) { const d = await res.json(); setError(d.error || 'Save failed'); setSaving(false); return }
-    setSaving(false); setModal(false); setForm(EMPTY); setSelStock(null); load()
-    // Refresh stock list (qty changed)
+    if (!res.ok) {
+      const d = await res.json()
+      setError(d.error || 'Save failed')
+      setSaving(false)
+      return
+    }
+    setSaving(false)
+    setModal(false)
+    setForm(EMPTY)
+    setSelStock(null)
+    setEditing(null)
+    load()
+    // Refresh stock list
     fetch('/api/stock').then(r => r.json()).then(d => setStocks(d.filter(s => s.quantity > 0)))
   }
 
   async function handleDelete() {
     await fetch(`/api/sales/${delTarget.saleId}`, { method: 'DELETE' })
-    setDelTarget(null); load()
+    setDelTarget(null)
+    load()
+    fetch('/api/stock').then(r => r.json()).then(d => setStocks(d.filter(s => s.quantity > 0)))
   }
 
   return (
@@ -78,7 +125,7 @@ export default function SalesPage() {
       <PageHeader
         title="Sales"
         subtitle={`${rows.length} record(s)`}
-        actions={<button onClick={() => { setForm(EMPTY); setSelStock(null); setError(''); setModal(true) }} className="btn-gold">+ Record Sale</button>}
+        actions={<button onClick={openNew} className="btn-gold">+ Record Sale</button>}
       />
 
       <div className="flex gap-2 mb-5">
@@ -107,7 +154,8 @@ export default function SalesPage() {
                   <td className="text-xs text-slate-700">{r.stock?.name || r.stock?.description || '—'}</td>
                   <td className="text-slate-600 text-xs">{r.customer?.customerName || 'Walk-in'}</td>
                   <td className="text-right font-mono text-xs text-slate-700">{r.quantity}</td>
-                  <td>
+                  <td className="whitespace-nowrap">
+                    <button onClick={() => openEdit(r)} className="text-sky-600 hover:text-sky-700 text-xs mr-3 transition-colors">Edit</button>
                     <button onClick={() => setDelTarget(r)} className="text-danger/80 hover:text-danger text-xs transition-colors">Void</button>
                   </td>
                 </tr>
@@ -118,14 +166,14 @@ export default function SalesPage() {
       </div>
 
       {/* Sale form modal */}
-      <Modal open={modal} onClose={() => setModal(false)} title="Record a Sale" wide>
+      <Modal open={modal} onClose={() => setModal(false)} title={editing ? `Edit Sale · ${editing.invoiceNo || ''}` : 'Record a Sale'} wide>
         {error && <div className="bg-danger/10 border border-danger/30 text-danger text-sm rounded-lg p-3 mb-4">{error}</div>}
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="field-label">Invoice No</label>
             <div className="flex gap-2">
               <input {...f('invoiceNo')} placeholder="SALE-20240101-001" className="field-input flex-1" />
-              <button onClick={genInvoice} className="btn-ghost btn-sm whitespace-nowrap">Auto</button>
+              {!editing && <button onClick={genInvoice} className="btn-ghost btn-sm whitespace-nowrap">Auto</button>}
             </div>
           </div>
           <div><label className="field-label">Sale Date</label><input {...f('txDate')} type="date" /></div>
@@ -138,7 +186,12 @@ export default function SalesPage() {
           </div>
 
           <div className="col-span-2 border-t border-slate-200 pt-4">
-            <label className="field-label">Product <span className="normal-case text-slate-500 ml-1">(showing in-stock items only)</span></label>
+            <label className="field-label">
+              Product{' '}
+              <span className="normal-case text-slate-500 ml-1">
+                {editing ? '(all products shown for editing)' : '(showing in-stock items only)'}
+              </span>
+            </label>
             <select value={form.stockId} onChange={e => pickStock(e.target.value)} className="field-input">
               <option value="">— Select product —</option>
               {stocks.map(s => (
@@ -151,20 +204,32 @@ export default function SalesPage() {
 
           {selStock && (
             <div className="col-span-2 bg-slate-100 rounded-lg px-4 py-3 grid grid-cols-2 gap-3 text-center">
-              <div><div className="text-slate-700 font-mono text-sm">{selStock.quantity}</div><div className="text-slate-600 text-xs mt-0.5">Available</div></div>
-              <div><div className="text-slate-700 text-sm">{selStock.stockType || '—'}</div><div className="text-slate-600 text-xs mt-0.5">Category</div></div>
+              <div>
+                <div className="text-slate-700 font-mono text-sm">
+                  {editing
+                    ? (selStock.quantity ?? 0) + Number(editing.quantity ?? 0)
+                    : selStock.quantity}
+                </div>
+                <div className="text-slate-600 text-xs mt-0.5">Available{editing ? ' (incl. this sale)' : ''}</div>
+              </div>
+              <div>
+                <div className="text-slate-700 text-sm">{selStock.stockType || '—'}</div>
+                <div className="text-slate-600 text-xs mt-0.5">Category</div>
+              </div>
             </div>
           )}
 
           <div>
             <label className="field-label">Qty to Sell</label>
-            <input {...f('quantity')} type="number" min="1" max={selStock?.quantity} placeholder="0" />
+            <input {...f('quantity')} type="number" min="1" placeholder="0" />
           </div>
           <div className="col-span-2"><label className="field-label">Notes</label><input {...f('notes')} placeholder="Optional notes" /></div>
         </div>
         <div className="flex justify-end gap-3 mt-5">
           <button onClick={() => setModal(false)} className="btn-ghost">Cancel</button>
-          <button onClick={handleSave} disabled={saving} className="btn-gold">{saving ? 'Saving…' : 'Confirm & Save'}</button>
+          <button onClick={handleSave} disabled={saving} className="btn-gold">
+            {saving ? 'Saving…' : editing ? 'Save Changes' : 'Confirm & Save'}
+          </button>
         </div>
       </Modal>
 

@@ -8,6 +8,7 @@ export async function GET(req) {
   const where = q
     ? { OR: [
         { invoiceNo:    { contains: q } },
+        { gdNumber:     { contains: q } },
         { supplierName: { contains: q } },
         { stock: { OR: [{ ourNo: { contains: q } }, { description: { contains: q } }] } },
       ], transactionType: 'Purchase' }
@@ -29,11 +30,12 @@ export async function POST(req) {
 
   const row = await prisma.sale.create({
     data: {
-      invoiceNo:       b.invoiceNo || null,
+      invoiceNo:       b.invoiceNo    || null,
+      gdNumber:        b.gdNumber     || null,
       transactionType: 'Purchase',
       txDate:          b.txDate ? new Date(b.txDate) : new Date(),
       stockId:         sid,
-      supplierName:    b.supplierName    || null,
+      supplierName:    b.supplierName || null,
       quantity:        qty,
       unitPriceFCY:    0,
       currencyCode:    'PKR',

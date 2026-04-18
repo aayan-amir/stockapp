@@ -1,0 +1,12 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\src",
+    "\\src\\app",
+    "\\src\\app\\(app)\\purchases",
+    "\\src\\app\\api",
+    "\\src\\app\\api\\purchases"
+  ],
+  "SelectedNode": "\\src\\app\\api\\purchases\\route.js",
+  "PreviewInSolutionExplorer": false
+}

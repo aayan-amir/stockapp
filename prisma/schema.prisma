@@ -62,6 +62,7 @@ model Stock {
 model Sale {
   saleId           Int       @id @default(autoincrement())
   invoiceNo        String?
+  gdNumber         String?
   transactionType  String
   txDate           DateTime  @default(now())
   stockId          Int?
