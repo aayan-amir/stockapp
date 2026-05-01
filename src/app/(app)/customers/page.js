@@ -4,7 +4,7 @@ import PageHeader from '@/components/PageHeader'
 import Modal from '@/components/Modal'
 import ConfirmDialog from '@/components/ConfirmDialog'
 
-const EMPTY = { customerName:'', address:'', phoneNumber:'', email:'', filerStatus:'', notes:'' }
+const EMPTY = { customerName:'', address:'', phoneNumber:'', email:'', ntn:'', gstNumber:'', filerStatus:'', notes:'' }
 const FILER = ['', 'Filer', 'Non-Filer', 'Exempt']
 
 export default function CustomersPage() {

@@ -35,6 +35,8 @@ model Customer {
   address      String?
   phoneNumber  String?
   email        String?
+  ntn          String?
+  gstNumber    String?
   filerStatus  String?
   notes        String?
   sales        Sale[]
@@ -57,26 +59,37 @@ model Stock {
   lastUpdated          DateTime     @default(now()) @updatedAt
   productType          ProductType? @relation(fields: [typeId], references: [typeId])
   transactions         Sale[]
+  saleItems            SaleItem[]
+}
+
+model SaleItem {
+  saleItemId Int    @id @default(autoincrement())
+  saleId     Int
+  stockId    Int?
+  quantity   Int    @default(0)
+  sale       Sale   @relation(fields: [saleId], references: [saleId], onDelete: Cascade)
+  stock      Stock? @relation(fields: [stockId], references: [stockId])
 }
 
 model Sale {
-  saleId           Int       @id @default(autoincrement())
+  saleId           Int        @id @default(autoincrement())
   invoiceNo        String?
   gdNumber         String?
   transactionType  String
-  txDate           DateTime  @default(now())
+  txDate           DateTime   @default(now())
   stockId          Int?
   customerId       Int?
   supplierName     String?
-  quantity         Int       @default(0)
-  unitPriceFCY     Float     @default(0)
-  currencyCode     String    @default("PKR")
-  exchangeRateUsed Float     @default(1)
-  taxRateUsed      Float     @default(0)
-  freightPKR       Float     @default(0)
-  otherChargesPKR  Float     @default(0)
-  totalPKR         Float     @default(0)
+  quantity         Int        @default(0)
+  unitPriceFCY     Float      @default(0)
+  currencyCode     String     @default("PKR")
+  exchangeRateUsed Float      @default(1)
+  taxRateUsed      Float      @default(0)
+  freightPKR       Float      @default(0)
+  otherChargesPKR  Float      @default(0)
+  totalPKR         Float      @default(0)
   notes            String?
-  stock            Stock?    @relation(fields: [stockId], references: [stockId])
-  customer         Customer? @relation(fields: [customerId], references: [customerId])
+  stock            Stock?     @relation(fields: [stockId], references: [stockId])
+  customer         Customer?  @relation(fields: [customerId], references: [customerId])
+  items            SaleItem[]
 }

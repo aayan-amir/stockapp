@@ -12,6 +12,8 @@ export async function PUT(req, { params }) {
       address:      b.address     || null,
       phoneNumber:  b.phoneNumber || null,
       email:        b.email       || null,
+      ntn:          b.ntn         || null,
+      gstNumber:    b.gstNumber   || null,
       filerStatus:  b.filerStatus || null,
       notes:        b.notes       || null,
     },
