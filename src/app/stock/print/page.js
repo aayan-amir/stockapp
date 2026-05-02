@@ -1,9 +1,11 @@
+export const dynamic = 'force-dynamic'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 
 const COOKIE = 'sms_auth'
 const PIN    = process.env.ACCESS_PIN || '1234'
+const ALLOWED_FIELDS = ['ourNo', 'oemNo', 'name', 'description', 'stockType', 'supplier']
 
 export default async function PrintStockPage({ searchParams }) {
   const token = (await cookies()).get(COOKIE)?.value
@@ -13,14 +15,14 @@ export default async function PrintStockPage({ searchParams }) {
   const q     = sp?.q     || ''
   const field = sp?.field || ''
 
-  const where = q && field
-    ? { [field]: { contains: q, mode: 'insensitive' } }
+  const where = q && field && ALLOWED_FIELDS.includes(field)
+    ? { [field]: { contains: q } }
     : q
     ? {
         OR: [
-          { ourNo:       { contains: q, mode: 'insensitive' } },
-          { name:        { contains: q, mode: 'insensitive' } },
-          { description: { contains: q, mode: 'insensitive' } },
+          { ourNo:       { contains: q } },
+          { name:        { contains: q } },
+          { description: { contains: q } },
         ],
       }
     : {}

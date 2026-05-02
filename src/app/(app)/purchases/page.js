@@ -121,7 +121,7 @@ export default function PurchasesPage() {
       <PageHeader
         title="Purchases"
         subtitle={`${rows.length} record(s)`}
-        actions={<button onClick={openNew} className="btn-gold">+ Record Purchase</button>}
+        actions={<div className="flex gap-2"><button onClick={() => { const p = q ? `?q=${encodeURIComponent(q)}` : ''; window.open(`/purchases/print${p}`, '_blank') }} className="btn-ghost">🖨 Print List</button><button onClick={openNew} className="btn-gold">+ Record Purchase</button></div>}
       />
 
       <div className="flex gap-2 mb-5">
