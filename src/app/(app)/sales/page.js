@@ -5,24 +5,22 @@ import Modal from '@/components/Modal'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import { fmtDate, today } from '@/lib/utils'
 
-const EMPTY = {
-  invoiceNo:'', txDate: today(), customerId:'', notes:'',
-  stockId:'', quantity:'',
-}
+const EMPTY_HEADER = { invoiceNo: '', txDate: today(), customerId: '', notes: '' }
+const EMPTY_ITEM   = { stockId: '', quantity: '' }
 
 export default function SalesPage() {
-  const [rows,       setRows]      = useState([])
-  const [loading,    setLoading]   = useState(true)
-  const [modal,      setModal]     = useState(false)
-  const [form,       setForm]      = useState(EMPTY)
-  const [saving,     setSaving]    = useState(false)
-  const [error,      setError]     = useState('')
-  const [stocks,     setStocks]    = useState([])
-  const [customers,  setCustomers] = useState([])
-  const [selStock,   setSelStock]  = useState(null)   // full stock record
-  const [q,          setQ]         = useState('')
-  const [delTarget,  setDelTarget] = useState(null)
-  const [editing,    setEditing]   = useState(null)   // null = new
+  const [rows,      setRows]      = useState([])
+  const [loading,   setLoading]   = useState(true)
+  const [modal,     setModal]     = useState(false)
+  const [header,    setHeader]    = useState(EMPTY_HEADER)
+  const [lineItems, setLineItems] = useState([{ ...EMPTY_ITEM }])
+  const [saving,    setSaving]    = useState(false)
+  const [error,     setError]     = useState('')
+  const [stocks,    setStocks]    = useState([])
+  const [customers, setCustomers] = useState([])
+  const [q,         setQ]         = useState('')
+  const [delTarget, setDelTarget] = useState(null)
+  const [editing,   setEditing]   = useState(null)
 
   const load = useCallback(() => {
     setLoading(true)
@@ -32,71 +30,65 @@ export default function SalesPage() {
 
   useEffect(() => { load() }, [load])
   useEffect(() => {
-    fetch('/api/stock').then(r => r.json()).then(d => setStocks(d))
+    fetch('/api/stock').then(r => r.json()).then(setStocks)
     fetch('/api/customers').then(r => r.json()).then(setCustomers)
   }, [])
 
-  const f = k => ({ value: form[k] ?? '', onChange: e => setForm(p => ({ ...p, [k]: e.target.value })), className: 'field-input' })
+  const fh = k => ({ value: header[k] ?? '', onChange: e => setHeader(p => ({ ...p, [k]: e.target.value })), className: 'field-input' })
 
-  function pickStock(id) {
-    const s = stocks.find(s => s.stockId === Number(id))
-    setSelStock(s || null)
-    setForm(p => ({ ...p, stockId: id }))
+  function updateItem(idx, field, val) {
+    setLineItems(prev => prev.map((it, i) => i === idx ? { ...it, [field]: val } : it))
   }
-
-  function openNew() {
-    setEditing(null)
-    setForm(EMPTY)
-    setSelStock(null)
-    setError('')
-    setModal(true)
-    // Reset stock list to in-stock only for new sales
-    fetch('/api/stock').then(r => r.json()).then(d => setStocks(d.filter(s => s.quantity > 0)))
-  }
-
-  function openEdit(row) {
-    setEditing(row)
-    const s = stocks.find(s => s.stockId === row.stockId) || row.stock || null
-    setSelStock(s)
-    setForm({
-      invoiceNo:  row.invoiceNo  || '',
-      txDate:     row.txDate ? row.txDate.slice(0, 10) : today(),
-      customerId: row.customerId ? String(row.customerId) : '',
-      notes:      row.notes      || '',
-      stockId:    String(row.stockId || ''),
-      quantity:   String(row.quantity || ''),
-    })
-    setError('')
-    // For editing, show all stocks so the current product is selectable
-    fetch('/api/stock').then(r => r.json()).then(setStocks)
-    setModal(true)
-  }
+  function addItem()    { setLineItems(prev => [...prev, { ...EMPTY_ITEM }]) }
+  function removeItem(idx) { setLineItems(prev => prev.filter((_, i) => i !== idx)) }
 
   async function genInvoice() {
     const r = await fetch('/api/invoice?type=Sale')
     const d = await r.json()
-    setForm(p => ({ ...p, invoiceNo: d.invoiceNo }))
+    setHeader(p => ({ ...p, invoiceNo: d.invoiceNo }))
+  }
+
+  function openNew() {
+    setEditing(null)
+    setHeader(EMPTY_HEADER)
+    setLineItems([{ ...EMPTY_ITEM }])
+    setError('')
+    fetch('/api/stock').then(r => r.json()).then(d => setStocks(d.filter(s => s.quantity > 0)))
+    setModal(true)
+  }
+
+  function openEdit(row) {
+    setEditing(row)
+    setHeader({
+      invoiceNo:  row.invoiceNo  || '',
+      txDate:     row.txDate ? row.txDate.slice(0, 10) : today(),
+      customerId: row.customerId ? String(row.customerId) : '',
+      notes:      row.notes      || '',
+    })
+    // Populate line items from new-style items[] or fall back to legacy stockId/quantity
+    const its = row.items && row.items.length > 0
+      ? row.items.map(it => ({ stockId: String(it.stockId || ''), quantity: String(it.quantity || '') }))
+      : (row.stockId ? [{ stockId: String(row.stockId), quantity: String(row.quantity || '') }] : [{ ...EMPTY_ITEM }])
+    setLineItems(its)
+    setError('')
+    fetch('/api/stock').then(r => r.json()).then(setStocks)
+    setModal(true)
   }
 
   async function handleSave() {
     setError('')
-    if (!form.invoiceNo)            return setError('Generate or enter an Invoice Number')
-    if (!form.stockId)              return setError('Select a product')
-    if (Number(form.quantity) <= 0) return setError('Enter quantity to sell')
-
-    // For new sales, enforce stock availability client-side
-    if (!editing) {
-      if (!selStock)                                          return setError('Product not found')
-      if (Number(form.quantity) > selStock.quantity)         return setError(`Only ${selStock.quantity} unit(s) available`)
+    if (!header.invoiceNo) return setError('Generate or enter an Invoice Number')
+    if (lineItems.length === 0) return setError('Add at least one item')
+    for (const [i, it] of lineItems.entries()) {
+      if (!it.stockId)              return setError(`Row ${i + 1}: select a product`)
+      if (Number(it.quantity) <= 0) return setError(`Row ${i + 1}: quantity must be > 0`)
     }
 
     setSaving(true)
+    const body = { ...header, items: lineItems.map(it => ({ stockId: Number(it.stockId), quantity: Number(it.quantity) })) }
     const url    = editing ? `/api/sales/${editing.saleId}` : '/api/sales'
     const method = editing ? 'PUT' : 'POST'
-    const res = await fetch(url, {
-      method, headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
-    })
+    const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
     if (!res.ok) {
       const d = await res.json()
       setError(d.error || 'Save failed')
@@ -105,11 +97,8 @@ export default function SalesPage() {
     }
     setSaving(false)
     setModal(false)
-    setForm(EMPTY)
-    setSelStock(null)
     setEditing(null)
     load()
-    // Refresh stock list
     fetch('/api/stock').then(r => r.json()).then(d => setStocks(d.filter(s => s.quantity > 0)))
   }
 
@@ -118,6 +107,15 @@ export default function SalesPage() {
     setDelTarget(null)
     load()
     fetch('/api/stock').then(r => r.json()).then(d => setStocks(d.filter(s => s.quantity > 0)))
+  }
+
+  // Summarise items for the table row
+  function itemSummary(row) {
+    const its = row.items && row.items.length > 0 ? row.items : []
+    if (its.length === 0) return { names: row.stock?.name || row.stock?.description || '—', totalQty: row.quantity }
+    const names = its.map(it => it.stock?.name || it.stock?.description || it.stock?.ourNo || '?').join(', ')
+    const totalQty = its.reduce((s, it) => s + (it.quantity || 0), 0)
+    return { names, totalQty }
   }
 
   return (
@@ -139,27 +137,30 @@ export default function SalesPage() {
           <table className="data-table">
             <thead>
               <tr>
-                <th>Invoice</th><th>Date</th><th>Our No.</th><th>Name</th><th>Customer</th>
-                <th className="text-right">Qty</th><th></th>
+                <th>Invoice</th><th>Date</th><th>Items</th><th>Customer</th>
+                <th className="text-right">Total Qty</th><th></th>
               </tr>
             </thead>
             <tbody>
-              {loading && <tr><td colSpan={7} className="text-center text-slate-500 py-10">Loading…</td></tr>}
-              {!loading && rows.length === 0 && <tr><td colSpan={7} className="text-center text-slate-500 py-10">No sales yet</td></tr>}
-              {rows.map(r => (
-                <tr key={r.saleId}>
-                  <td className="font-mono text-xs text-sky-600">{r.invoiceNo || '—'}</td>
-                  <td className="text-xs text-slate-600 whitespace-nowrap">{fmtDate(r.txDate)}</td>
-                  <td className="font-mono text-xs text-slate-700">{r.stock?.ourNo || '—'}</td>
-                  <td className="text-xs text-slate-700">{r.stock?.name || r.stock?.description || '—'}</td>
-                  <td className="text-slate-600 text-xs">{r.customer?.customerName || 'Walk-in'}</td>
-                  <td className="text-right font-mono text-xs text-slate-700">{r.quantity}</td>
-                  <td className="whitespace-nowrap">
-                    <button onClick={() => openEdit(r)} className="text-sky-600 hover:text-sky-700 text-xs mr-3 transition-colors">Edit</button>
-                    <button onClick={() => setDelTarget(r)} className="text-danger/80 hover:text-danger text-xs transition-colors">Void</button>
-                  </td>
-                </tr>
-              ))}
+              {loading && <tr><td colSpan={6} className="text-center text-slate-500 py-10">Loading…</td></tr>}
+              {!loading && rows.length === 0 && <tr><td colSpan={6} className="text-center text-slate-500 py-10">No sales yet</td></tr>}
+              {rows.map(r => {
+                const { names, totalQty } = itemSummary(r)
+                return (
+                  <tr key={r.saleId}>
+                    <td className="font-mono text-xs text-sky-600">{r.invoiceNo || '—'}</td>
+                    <td className="text-xs text-slate-600 whitespace-nowrap">{fmtDate(r.txDate)}</td>
+                    <td className="text-xs text-slate-700 max-w-[220px] truncate">{names}</td>
+                    <td className="text-slate-600 text-xs">{r.customer?.customerName || 'Walk-in'}</td>
+                    <td className="text-right font-mono text-xs text-slate-700">{totalQty}</td>
+                    <td className="whitespace-nowrap">
+                      <button onClick={() => window.open(`/sales/${r.saleId}/print`, '_blank')} className="text-emerald-600 hover:text-emerald-500 text-xs mr-3 transition-colors">Print</button>
+                      <button onClick={() => openEdit(r)} className="text-sky-600 hover:text-sky-700 text-xs mr-3 transition-colors">Edit</button>
+                      <button onClick={() => setDelTarget(r)} className="text-danger/80 hover:text-danger text-xs transition-colors">Void</button>
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>
@@ -168,63 +169,79 @@ export default function SalesPage() {
       {/* Sale form modal */}
       <Modal open={modal} onClose={() => setModal(false)} title={editing ? `Edit Sale · ${editing.invoiceNo || ''}` : 'Record a Sale'} wide>
         {error && <div className="bg-danger/10 border border-danger/30 text-danger text-sm rounded-lg p-3 mb-4">{error}</div>}
-        <div className="grid grid-cols-2 gap-4">
+
+        {/* Header fields */}
+        <div className="grid grid-cols-2 gap-4 mb-4">
           <div>
             <label className="field-label">Invoice No</label>
             <div className="flex gap-2">
-              <input {...f('invoiceNo')} placeholder="SALE-20240101-001" className="field-input flex-1" />
+              <input {...fh('invoiceNo')} placeholder="SALE-20240101-001" className="field-input flex-1" />
               {!editing && <button onClick={genInvoice} className="btn-ghost btn-sm whitespace-nowrap">Auto</button>}
             </div>
           </div>
-          <div><label className="field-label">Sale Date</label><input {...f('txDate')} type="date" /></div>
+          <div><label className="field-label">Sale Date</label><input {...fh('txDate')} type="date" /></div>
           <div className="col-span-2">
             <label className="field-label">Customer <span className="normal-case text-slate-500 ml-1">(leave blank for walk-in)</span></label>
-            <select {...f('customerId')} className="field-input">
+            <select {...fh('customerId')} className="field-input">
               <option value="">Walk-in / No customer</option>
               {customers.map(c => <option key={c.customerId} value={c.customerId}>{c.customerName}</option>)}
             </select>
           </div>
-
-          <div className="col-span-2 border-t border-slate-200 pt-4">
-            <label className="field-label">
-              Product{' '}
-              <span className="normal-case text-slate-500 ml-1">
-                {editing ? '(all products shown for editing)' : '(showing in-stock items only)'}
-              </span>
-            </label>
-            <select value={form.stockId} onChange={e => pickStock(e.target.value)} className="field-input">
-              <option value="">— Select product —</option>
-              {stocks.map(s => (
-                <option key={s.stockId} value={s.stockId}>
-                  {s.ourNo ? `${s.ourNo} · ` : ''}{s.name || s.description || 'Unnamed'} — {s.quantity} available
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {selStock && (
-            <div className="col-span-2 bg-slate-100 rounded-lg px-4 py-3 grid grid-cols-2 gap-3 text-center">
-              <div>
-                <div className="text-slate-700 font-mono text-sm">
-                  {editing
-                    ? (selStock.quantity ?? 0) + Number(editing.quantity ?? 0)
-                    : selStock.quantity}
-                </div>
-                <div className="text-slate-600 text-xs mt-0.5">Available{editing ? ' (incl. this sale)' : ''}</div>
-              </div>
-              <div>
-                <div className="text-slate-700 text-sm">{selStock.stockType || '—'}</div>
-                <div className="text-slate-600 text-xs mt-0.5">Category</div>
-              </div>
-            </div>
-          )}
-
-          <div>
-            <label className="field-label">Qty to Sell</label>
-            <input {...f('quantity')} type="number" min="1" placeholder="0" />
-          </div>
-          <div className="col-span-2"><label className="field-label">Notes</label><input {...f('notes')} placeholder="Optional notes" /></div>
         </div>
+
+        {/* Line items */}
+        <div className="border-t border-zinc-700 pt-4">
+          <div className="flex items-center justify-between mb-3">
+            <span className="field-label mb-0">Line Items</span>
+            <button onClick={addItem} className="btn-ghost btn-sm">+ Add Item</button>
+          </div>
+
+          <div className="space-y-2">
+            {lineItems.map((item, idx) => {
+              const selStock = stocks.find(s => s.stockId === Number(item.stockId))
+              return (
+                <div key={idx} className="flex gap-2 items-start">
+                  <div className="flex-1">
+                    <select
+                      value={item.stockId}
+                      onChange={e => updateItem(idx, 'stockId', e.target.value)}
+                      className="field-input"
+                    >
+                      <option value="">— Select product —</option>
+                      {stocks.map(s => (
+                        <option key={s.stockId} value={s.stockId}>
+                          {s.ourNo ? `${s.ourNo} · ` : ''}{s.name || s.description || 'Unnamed'} — {s.quantity} avail.
+                        </option>
+                      ))}
+                    </select>
+                    {selStock && (
+                      <div className="text-xs text-slate-500 mt-0.5 pl-1">
+                        Available: {selStock.quantity} · {selStock.stockType || ''}
+                      </div>
+                    )}
+                  </div>
+                  <div className="w-24">
+                    <input
+                      type="number" min="1" placeholder="Qty"
+                      value={item.quantity}
+                      onChange={e => updateItem(idx, 'quantity', e.target.value)}
+                      className="field-input"
+                    />
+                  </div>
+                  {lineItems.length > 1 && (
+                    <button onClick={() => removeItem(idx)} className="text-danger/70 hover:text-danger text-lg leading-none pt-2 px-1">×</button>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        <div className="mt-4">
+          <label className="field-label">Notes</label>
+          <input {...fh('notes')} placeholder="Optional notes" />
+        </div>
+
         <div className="flex justify-end gap-3 mt-5">
           <button onClick={() => setModal(false)} className="btn-ghost">Cancel</button>
           <button onClick={handleSave} disabled={saving} className="btn-gold">
