@@ -68,7 +68,7 @@ export default function StockPage() {
       <PageHeader
         title="Stock"
         subtitle={`${rows.length} item(s)`}
-        actions={<button onClick={openNew} className="btn-gold">+ New Item</button>}
+        actions={<div className="flex gap-2"><button onClick={() => { const p = q ? `?q=${encodeURIComponent(q)}&field=${field}` : ''; window.open(`/stock/print${p}`, '_blank') }} className="btn-ghost">🖨 Print List</button><button onClick={openNew} className="btn-gold">+ New Item</button></div>}
       />
 
       {/* Search bar */}

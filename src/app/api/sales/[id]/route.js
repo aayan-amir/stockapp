@@ -2,74 +2,94 @@ export const dynamic = 'force-dynamic'
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 
+export async function GET(_, { params }) {
+  const { id } = await params
+  const row = await prisma.sale.findUnique({
+    where: { saleId: Number(id) },
+    include: { stock: true, customer: true, items: { include: { stock: true } } },
+  })
+  if (!row) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  return NextResponse.json(row)
+}
+
 export async function PUT(req, { params }) {
   const { id } = await params
   const b = await req.json()
-  const sid = Number(b.stockId)
-  const newQty = Number(b.quantity)
+  const items = Array.isArray(b.items) ? b.items : []
 
-  if (!sid || newQty <= 0)
-    return NextResponse.json({ error: 'stockId and quantity required' }, { status: 400 })
+  if (items.length === 0)
+    return NextResponse.json({ error: 'At least one item is required' }, { status: 400 })
 
-  // Get existing record
-  const existing = await prisma.sale.findUnique({ where: { saleId: Number(id) } })
-  if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-
-  const oldQty = existing.quantity
-  const oldSid = existing.stockId
-  const qtyDiff = newQty - oldQty
-
-  // Live stock check: available = current stock + qty already sold (old) - new qty requested
-  // If same stock: available after edit = stock.quantity + oldQty - newQty
-  // If different stock: new stock must have >= newQty available
-  if (oldSid === sid) {
-    const stock = await prisma.stock.findUnique({ where: { stockId: sid } })
-    const wouldBe = (stock?.quantity ?? 0) + oldQty - newQty
-    if (wouldBe < 0)
-      return NextResponse.json({ error: `Only ${(stock?.quantity ?? 0) + oldQty} unit(s) available` }, { status: 400 })
-  } else {
-    const stock = await prisma.stock.findUnique({ where: { stockId: sid } })
-    if ((stock?.quantity ?? 0) < newQty)
-      return NextResponse.json({ error: `Only ${stock?.quantity ?? 0} unit(s) available` }, { status: 400 })
+  for (const item of items) {
+    const sid = Number(item.stockId)
+    const qty = Number(item.quantity)
+    if (!sid || qty <= 0) return NextResponse.json({ error: 'Each item needs a product and quantity > 0' }, { status: 400 })
   }
 
-  // Update sale record
+  const existing = await prisma.sale.findUnique({
+    where: { saleId: Number(id) },
+    include: { items: true },
+  })
+  if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
+  // Reverse old stock movements: old SaleItems or legacy stockId/quantity
+  const oldItems = existing.items.length > 0
+    ? existing.items
+    : (existing.stockId ? [{ stockId: existing.stockId, quantity: existing.quantity }] : [])
+
+  for (const old of oldItems) {
+    if (!old.stockId) continue
+    const sid = old.stockId
+    const qty = old.quantity
+    await prisma.$executeRaw`
+      UPDATE "Stock"
+      SET "stockOut" = GREATEST(0, "stockOut" - ${qty}),
+          "quantity" = "stockIn" - GREATEST(0, "stockOut" - ${qty}),
+          "lastUpdated" = NOW()
+      WHERE "stockId" = ${sid}
+    `
+  }
+
+  // Validate new items stock availability
+  for (const item of items) {
+    const sid = Number(item.stockId)
+    const qty = Number(item.quantity)
+    const stock = await prisma.stock.findUnique({ where: { stockId: sid } })
+    if (!stock) return NextResponse.json({ error: `Product ${sid} not found` }, { status: 404 })
+    if (stock.quantity < qty)
+      return NextResponse.json({ error: `Only ${stock.quantity} unit(s) available for "${stock.name || stock.description || sid}"` }, { status: 400 })
+  }
+
+  // Delete old SaleItems and create new ones
+  await prisma.saleItem.deleteMany({ where: { saleId: Number(id) } })
+
   const row = await prisma.sale.update({
     where: { saleId: Number(id) },
     data: {
       invoiceNo:  b.invoiceNo  || null,
       txDate:     b.txDate ? new Date(b.txDate) : existing.txDate,
-      stockId:    sid,
       customerId: b.customerId ? Number(b.customerId) : null,
-      quantity:   newQty,
+      stockId:    null,
+      quantity:   0,
       notes:      b.notes || null,
+      items: {
+        create: items.map(item => ({
+          stockId:  Number(item.stockId),
+          quantity: Number(item.quantity),
+        })),
+      },
     },
+    include: { items: { include: { stock: true } }, customer: true },
   })
 
-  // Adjust stock
-  if (oldSid && oldSid !== sid) {
-    // Reverse old sale on old stock
+  // Apply new stock movements
+  for (const item of items) {
+    const sid = Number(item.stockId)
+    const qty = Number(item.quantity)
     await prisma.$executeRaw`
       UPDATE "Stock"
-      SET "stockOut" = GREATEST(0, "stockOut" - ${oldQty}),
-          "quantity" = "stockIn" - GREATEST(0, "stockOut" - ${oldQty}),
-          "lastUpdated" = NOW()
-      WHERE "stockId" = ${oldSid}
-    `
-    // Apply new sale on new stock
-    await prisma.$executeRaw`
-      UPDATE "Stock"
-      SET "stockOut" = "stockOut" + ${newQty},
-          "quantity" = "stockIn" - ("stockOut" + ${newQty}),
-          "lastUpdated" = NOW()
-      WHERE "stockId" = ${sid}
-    `
-  } else if (oldSid && qtyDiff !== 0) {
-    // Same stock, adjust difference
-    await prisma.$executeRaw`
-      UPDATE "Stock"
-      SET "stockOut" = "stockOut" + ${qtyDiff},
-          "quantity" = "stockIn" - ("stockOut" + ${qtyDiff}),
+      SET "stockOut" = "stockOut" + ${qty},
+          "quantity" = "stockIn"  - ("stockOut" + ${qty}),
           "lastUpdated" = NOW()
       WHERE "stockId" = ${sid}
     `
@@ -80,32 +100,31 @@ export async function PUT(req, { params }) {
 
 export async function DELETE(_, { params }) {
   const { id } = await params
-  // Reverse stock movement before deleting
-  const row = await prisma.sale.findUnique({ where: { saleId: Number(id) } })
+  const row = await prisma.sale.findUnique({
+    where: { saleId: Number(id) },
+    include: { items: true },
+  })
   if (!row) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  const qty = row.quantity
-  const sid = row.stockId
+
+  // Determine items to reverse
+  const itemsToReverse = row.items.length > 0
+    ? row.items
+    : (row.stockId ? [{ stockId: row.stockId, quantity: row.quantity }] : [])
 
   await prisma.sale.delete({ where: { saleId: Number(id) } })
 
-  if (sid) {
-    if (row.transactionType === 'Sale') {
-      await prisma.$executeRaw`
-        UPDATE "Stock"
-        SET "stockOut" = GREATEST(0, "stockOut" - ${qty}),
-            "quantity" = "stockIn" - GREATEST(0, "stockOut" - ${qty}),
-            "lastUpdated" = NOW()
-        WHERE "stockId" = ${sid}
-      `
-    } else {
-      await prisma.$executeRaw`
-        UPDATE "Stock"
-        SET "stockIn"  = GREATEST(0, "stockIn" - ${qty}),
-            "quantity" = GREATEST(0, "stockIn" - ${qty}) - "stockOut",
-            "lastUpdated" = NOW()
-        WHERE "stockId" = ${sid}
-      `
-    }
+  for (const item of itemsToReverse) {
+    if (!item.stockId) continue
+    const sid = item.stockId
+    const qty = item.quantity
+    await prisma.$executeRaw`
+      UPDATE "Stock"
+      SET "stockOut" = GREATEST(0, "stockOut" - ${qty}),
+          "quantity" = "stockIn" - GREATEST(0, "stockOut" - ${qty}),
+          "lastUpdated" = NOW()
+      WHERE "stockId" = ${sid}
+    `
   }
+
   return NextResponse.json({ ok: true })
 }

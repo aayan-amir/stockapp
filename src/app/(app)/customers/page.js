@@ -4,7 +4,7 @@ import PageHeader from '@/components/PageHeader'
 import Modal from '@/components/Modal'
 import ConfirmDialog from '@/components/ConfirmDialog'
 
-const EMPTY = { customerName:'', address:'', phoneNumber:'', email:'', filerStatus:'', notes:'' }
+const EMPTY = { customerName:'', address:'', phoneNumber:'', email:'', ntn:'', gstNumber:'', filerStatus:'', notes:'' }
 const FILER = ['', 'Filer', 'Non-Filer', 'Exempt']
 
 export default function CustomersPage() {
@@ -26,7 +26,7 @@ export default function CustomersPage() {
   useEffect(() => { load() }, [load])
 
   function openNew()     { setEditing(null); setForm(EMPTY); setModal(true) }
-  function openEdit(row) { setEditing(row); setForm({ customerName: row.customerName, address: row.address||'', phoneNumber: row.phoneNumber||'', email: row.email||'', filerStatus: row.filerStatus||'', notes: row.notes||'' }); setModal(true) }
+  function openEdit(row) { setEditing(row); setForm({ customerName: row.customerName, address: row.address||'', phoneNumber: row.phoneNumber||'', email: row.email||'', ntn: row.ntn||'', gstNumber: row.gstNumber||'', filerStatus: row.filerStatus||'', notes: row.notes||'' }); setModal(true) }
 
   async function handleSave() {
     if (!form.customerName.trim()) return alert('Customer Name is required')
@@ -56,18 +56,20 @@ export default function CustomersPage() {
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="data-table">
-            <thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Filer</th><th>Address</th><th></th></tr></thead>
+            <thead><tr><th>Name</th><th>Phone</th><th>NTN</th><th>GST No.</th><th>Filer</th><th>Address</th><th></th></tr></thead>
             <tbody>
-              {loading && <tr><td colSpan={6} className="text-center text-slate-500 py-10">Loading…</td></tr>}
-              {!loading && rows.length === 0 && <tr><td colSpan={6} className="text-center text-slate-500 py-10">No customers yet</td></tr>}
+              {loading && <tr><td colSpan={7} className="text-center text-slate-500 py-10">Loading…</td></tr>}
+              {!loading && rows.length === 0 && <tr><td colSpan={7} className="text-center text-slate-500 py-10">No customers yet</td></tr>}
               {rows.map(r => (
                 <tr key={r.customerId}>
                   <td className="font-semibold">{r.customerName}</td>
                   <td className="text-slate-600 text-xs font-mono">{r.phoneNumber || '—'}</td>
-                  <td className="text-slate-600 text-xs">{r.email || '—'}</td>
+                  <td className="text-slate-600 text-xs font-mono">{r.ntn || '—'}</td>
+                  <td className="text-slate-600 text-xs font-mono">{r.gstNumber || '—'}</td>
                   <td>{r.filerStatus ? <span className="badge bg-slate-200 text-sky-700">{r.filerStatus}</span> : '—'}</td>
                   <td className="text-slate-600 text-xs max-w-[200px] truncate">{r.address || '—'}</td>
                   <td className="whitespace-nowrap">
+                    <button onClick={() => window.open(`/customers/${r.customerId}/print`, '_blank')} className="text-emerald-600 hover:text-emerald-500 text-xs mr-3 transition-colors">Print</button>
                     <button onClick={() => openEdit(r)} className="text-sky-600 hover:text-sky-700 text-xs mr-3 transition-colors">Edit</button>
                     <button onClick={() => setDelTarget(r)} className="text-danger/80 hover:text-danger text-xs transition-colors">Delete</button>
                   </td>
@@ -81,8 +83,14 @@ export default function CustomersPage() {
       <Modal open={modal} onClose={() => setModal(false)} title={editing ? `Edit · ${editing.customerName}` : 'New Customer'}>
         <div className="space-y-4">
           <div><label className="field-label">Customer Name *</label><input {...f('customerName')} placeholder="Full name" /></div>
-          <div><label className="field-label">Phone</label><input {...f('phoneNumber')} placeholder="+92 300 0000000" /></div>
-          <div><label className="field-label">Email</label><input {...f('email')} type="email" placeholder="email@example.com" /></div>
+          <div className="grid grid-cols-2 gap-4">
+            <div><label className="field-label">Phone</label><input {...f('phoneNumber')} placeholder="+92 300 0000000" /></div>
+            <div><label className="field-label">Email</label><input {...f('email')} type="email" placeholder="email@example.com" /></div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div><label className="field-label">NTN Number</label><input {...f('ntn')} placeholder="e.g. 1234567-8" /></div>
+            <div><label className="field-label">GST / STRN Number</label><input {...f('gstNumber')} placeholder="e.g. 08-01-9999-001-99" /></div>
+          </div>
           <div>
             <label className="field-label">Filer Status</label>
             <select {...f('filerStatus')} className="field-input">
