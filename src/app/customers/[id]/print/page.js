@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
+import PrintControls from '@/components/PrintControls'
 
 const COOKIE = 'sms_auth'
 const PIN    = process.env.ACCESS_PIN || '1234'
@@ -49,21 +50,7 @@ export default async function PrintCustomerPage({ params }) {
       `}</style>
 
       {/* Screen controls */}
-      <div className="no-print" style={{ background: '#1e293b', padding: '12px 24px', display: 'flex', gap: 12, alignItems: 'center' }}>
-        <button
-          onClick={() => window.print()}
-          style={{ background: '#7c3aed', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 20px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
-        >
-          🖨 Print / Save PDF
-        </button>
-        <button
-          onClick={() => window.close()}
-          style={{ background: 'transparent', color: '#94a3b8', border: '1px solid #475569', borderRadius: 8, padding: '8px 16px', fontSize: 13, cursor: 'pointer' }}
-        >
-          Close
-        </button>
-        <span style={{ color: '#64748b', fontSize: 12, marginLeft: 8 }}>Tip: choose "Save as PDF" in the print dialog for a PDF copy.</span>
-      </div>
+      <PrintControls />
 
       {/* Document */}
       <div style={{ maxWidth: 720, margin: '32px auto', padding: '40px 48px', background: '#fff', boxShadow: '0 2px 24px rgba(0,0,0,.08)' }}>
