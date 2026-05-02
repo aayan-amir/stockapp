@@ -121,7 +121,7 @@ export default async function PrintInvoicePage({ params }) {
             <table style={{ fontSize: 13, borderCollapse: 'collapse', width: '100%' }}>
               <tbody>
                 <tr>
-                  <td style={{ color: '#6b7280', paddingRight: 12, paddingBottom: 4 }}>{isPurchase ? 'PO No.' : 'Invoice No'}</td>
+                  <td style={{ color: '#6b7280', paddingRight: 12, paddingBottom: 4 }}>{isPurchase ? 'PO No.' : 'Invoice No.'}</td>
                   <td style={{ fontWeight: 600, fontFamily: 'monospace' }}>{sale.invoiceNo || '—'}</td>
                 </tr>
                 <tr>
