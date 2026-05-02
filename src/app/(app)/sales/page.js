@@ -123,7 +123,7 @@ export default function SalesPage() {
       <PageHeader
         title="Sales"
         subtitle={`${rows.length} record(s)`}
-        actions={<button onClick={openNew} className="btn-gold">+ Record Sale</button>}
+        actions={<div className="flex gap-2"><button onClick={() => { const p = q ? `?q=${encodeURIComponent(q)}` : ''; window.open(`/sales/print${p}`, '_blank') }} className="btn-ghost">🖨 Print List</button><button onClick={openNew} className="btn-gold">+ Record Sale</button></div>}
       />
 
       <div className="flex gap-2 mb-5">

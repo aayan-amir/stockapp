@@ -44,7 +44,7 @@ export default function CustomersPage() {
       <PageHeader
         title="Customers"
         subtitle={`${rows.length} customer(s)`}
-        actions={<button onClick={openNew} className="btn-gold">+ Add Customer</button>}
+        actions={<div className="flex gap-2"><button onClick={() => { const p = q ? `?q=${encodeURIComponent(q)}` : ''; window.open(`/customers/print${p}`, '_blank') }} className="btn-ghost">🖨 Print List</button><button onClick={openNew} className="btn-gold">+ Add Customer</button></div>}
       />
 
       <div className="flex gap-2 mb-5">
