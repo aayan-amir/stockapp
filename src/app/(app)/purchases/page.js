@@ -153,6 +153,7 @@ export default function PurchasesPage() {
                     <td className="text-slate-600 text-xs">{r.supplierName || '—'}</td>
                     <td className="text-right font-mono text-xs text-slate-700">{totalQty}</td>
                     <td className="whitespace-nowrap">
+                      <button onClick={() => window.open(`/sales/${r.saleId}/print`, '_blank')} className="text-emerald-600 hover:text-emerald-500 text-xs mr-3 transition-colors">Print</button>
                       <button onClick={() => openEdit(r)} className="text-sky-600 hover:text-sky-700 text-xs mr-3 transition-colors">Edit</button>
                       <button onClick={() => setDelTarget(r)} className="text-danger/80 hover:text-danger text-xs transition-colors">Delete</button>
                     </td>

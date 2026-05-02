@@ -22,10 +22,15 @@ export default async function PrintInvoicePage({ params }) {
   if (!sale) {
     return (
       <div style={{ padding: 40, fontFamily: 'sans-serif' }}>
-        <h1>Invoice not found</h1>
+        <h1>Document not found</h1>
       </div>
     )
   }
+
+  const isPurchase = sale.transactionType === 'Purchase'
+  const docTitle   = isPurchase ? 'PURCHASE ORDER' : 'INVOICE'
+  const accentColor = isPurchase ? '#0369a1' : '#7c3aed'
+  const bgAccent    = isPurchase ? '#f0f9ff' : '#f8f5ff'
 
   // Normalise line items – support both new multi-item and legacy single-item records
   const lineItems = sale.items && sale.items.length > 0
@@ -41,15 +46,6 @@ export default async function PrintInvoicePage({ params }) {
 
   return (
     <>
-      {/* Print-trigger script – auto-opens print dialog */}
-      <script
-        dangerouslySetInnerHTML={{
-          __html: `window.addEventListener('load', () => {
-            document.getElementById('print-btn').focus();
-          })`,
-        }}
-      />
-
       <style>{`
         @media print {
           .no-print { display: none !important; }
@@ -64,7 +60,7 @@ export default async function PrintInvoicePage({ params }) {
         <button
           id="print-btn"
           onClick={() => window.print()}
-          style={{ background: '#7c3aed', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 20px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+          style={{ background: accentColor, color: '#fff', border: 'none', borderRadius: 8, padding: '8px 20px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
         >
           🖨 Print / Save PDF
         </button>
@@ -77,39 +73,47 @@ export default async function PrintInvoicePage({ params }) {
         <span style={{ color: '#64748b', fontSize: 12, marginLeft: 8 }}>Tip: choose "Save as PDF" in the print dialog for a PDF copy.</span>
       </div>
 
-      {/* Invoice document */}
+      {/* Document */}
       <div style={{ maxWidth: 720, margin: '32px auto', padding: '40px 48px', background: '#fff', boxShadow: '0 2px 24px rgba(0,0,0,.08)' }}>
 
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 32 }}>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 800, color: '#1a1a1a', letterSpacing: -0.5 }}>INVOICE</div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: '#1a1a1a', letterSpacing: -0.5 }}>{docTitle}</div>
             <div style={{ fontSize: 13, color: '#6b7280', marginTop: 4 }}>Stock Management System</div>
           </div>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: 18, fontWeight: 700, color: '#7c3aed', fontFamily: 'monospace' }}>{sale.invoiceNo || '—'}</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: accentColor, fontFamily: 'monospace' }}>{sale.invoiceNo || '—'}</div>
             <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>{dateStr}</div>
           </div>
         </div>
 
         {/* Divider */}
-        <div style={{ borderTop: '2px solid #7c3aed', marginBottom: 28 }} />
+        <div style={{ borderTop: `2px solid ${accentColor}`, marginBottom: 28 }} />
 
-        {/* Bill to / Invoice meta */}
+        {/* Bill to / PO details */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 32 }}>
           <div>
-            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1.5, textTransform: 'uppercase', color: '#9ca3af', marginBottom: 6 }}>Bill To</div>
-            {customer ? (
-              <>
-                <div style={{ fontWeight: 700, fontSize: 15 }}>{customer.customerName}</div>
-                {customer.address    && <div style={{ color: '#6b7280', marginTop: 2 }}>{customer.address}</div>}
-                {customer.phoneNumber && <div style={{ color: '#6b7280', marginTop: 1 }}>📞 {customer.phoneNumber}</div>}
-                {customer.email      && <div style={{ color: '#6b7280', marginTop: 1 }}>✉ {customer.email}</div>}
-                {customer.ntn        && <div style={{ color: '#6b7280', marginTop: 1 }}>NTN: <b>{customer.ntn}</b></div>}
-                {customer.gstNumber  && <div style={{ color: '#6b7280', marginTop: 1 }}>GST: <b>{customer.gstNumber}</b></div>}
-              </>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1.5, textTransform: 'uppercase', color: '#9ca3af', marginBottom: 6 }}>
+              {isPurchase ? 'Supplier' : 'Bill To'}
+            </div>
+            {isPurchase ? (
+              sale.supplierName
+                ? <div style={{ fontWeight: 700, fontSize: 15 }}>{sale.supplierName}</div>
+                : <div style={{ color: '#6b7280', fontStyle: 'italic' }}>No supplier recorded</div>
             ) : (
-              <div style={{ color: '#6b7280', fontStyle: 'italic' }}>Walk-in Customer</div>
+              customer ? (
+                <>
+                  <div style={{ fontWeight: 700, fontSize: 15 }}>{customer.customerName}</div>
+                  {customer.address     && <div style={{ color: '#6b7280', marginTop: 2 }}>{customer.address}</div>}
+                  {customer.phoneNumber && <div style={{ color: '#6b7280', marginTop: 1 }}>📞 {customer.phoneNumber}</div>}
+                  {customer.email       && <div style={{ color: '#6b7280', marginTop: 1 }}>✉ {customer.email}</div>}
+                  {customer.ntn         && <div style={{ color: '#6b7280', marginTop: 1 }}>NTN: <b>{customer.ntn}</b></div>}
+                  {customer.gstNumber   && <div style={{ color: '#6b7280', marginTop: 1 }}>GST: <b>{customer.gstNumber}</b></div>}
+                </>
+              ) : (
+                <div style={{ color: '#6b7280', fontStyle: 'italic' }}>Walk-in Customer</div>
+              )
             )}
           </div>
           <div>
@@ -117,17 +121,23 @@ export default async function PrintInvoicePage({ params }) {
             <table style={{ fontSize: 13, borderCollapse: 'collapse', width: '100%' }}>
               <tbody>
                 <tr>
-                  <td style={{ color: '#6b7280', paddingRight: 12, paddingBottom: 4 }}>Invoice No</td>
+                  <td style={{ color: '#6b7280', paddingRight: 12, paddingBottom: 4 }}>{isPurchase ? 'PO No.' : 'Invoice No'}</td>
                   <td style={{ fontWeight: 600, fontFamily: 'monospace' }}>{sale.invoiceNo || '—'}</td>
                 </tr>
                 <tr>
                   <td style={{ color: '#6b7280', paddingRight: 12, paddingBottom: 4 }}>Date</td>
                   <td>{dateStr}</td>
                 </tr>
-                {sale.transactionType === 'Sale' && sale.customer?.filerStatus && (
+                {isPurchase && sale.gdNumber && (
+                  <tr>
+                    <td style={{ color: '#6b7280', paddingRight: 12, paddingBottom: 4 }}>GD Number</td>
+                    <td style={{ fontFamily: 'monospace' }}>{sale.gdNumber}</td>
+                  </tr>
+                )}
+                {!isPurchase && customer?.filerStatus && (
                   <tr>
                     <td style={{ color: '#6b7280', paddingRight: 12, paddingBottom: 4 }}>Filer Status</td>
-                    <td>{sale.customer.filerStatus}</td>
+                    <td>{customer.filerStatus}</td>
                   </tr>
                 )}
               </tbody>
@@ -138,11 +148,12 @@ export default async function PrintInvoicePage({ params }) {
         {/* Items table */}
         <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 24 }}>
           <thead>
-            <tr style={{ background: '#f8f5ff' }}>
-              <th style={{ textAlign: 'left',  padding: '10px 12px', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: '#7c3aed', borderBottom: '1px solid #e5e7eb' }}>#</th>
-              <th style={{ textAlign: 'left',  padding: '10px 12px', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: '#7c3aed', borderBottom: '1px solid #e5e7eb' }}>Our No.</th>
-              <th style={{ textAlign: 'left',  padding: '10px 12px', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: '#7c3aed', borderBottom: '1px solid #e5e7eb' }}>Description</th>
-              <th style={{ textAlign: 'right', padding: '10px 12px', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: '#7c3aed', borderBottom: '1px solid #e5e7eb' }}>Qty</th>
+            <tr style={{ background: bgAccent }}>
+              {['#', 'Our No.', 'Description', 'Qty'].map((h, i) => (
+                <th key={h} style={{ textAlign: i === 3 ? 'right' : 'left', padding: '10px 12px', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: accentColor, borderBottom: '1px solid #e5e7eb' }}>
+                  {h}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
@@ -159,9 +170,9 @@ export default async function PrintInvoicePage({ params }) {
             ))}
           </tbody>
           <tfoot>
-            <tr style={{ background: '#f8f5ff' }}>
-              <td colSpan={3} style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, fontSize: 13, color: '#7c3aed' }}>Total Quantity</td>
-              <td style={{ padding: '10px 12px', textAlign: 'right', fontFamily: 'monospace', fontWeight: 700, fontSize: 14, color: '#7c3aed' }}>{totalQty}</td>
+            <tr style={{ background: bgAccent }}>
+              <td colSpan={3} style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, fontSize: 13, color: accentColor }}>Total Quantity</td>
+              <td style={{ padding: '10px 12px', textAlign: 'right', fontFamily: 'monospace', fontWeight: 700, fontSize: 14, color: accentColor }}>{totalQty}</td>
             </tr>
           </tfoot>
         </table>
@@ -176,9 +187,7 @@ export default async function PrintInvoicePage({ params }) {
 
         {/* Footer */}
         <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-          <div style={{ fontSize: 11, color: '#9ca3af' }}>
-            Generated by Stock Management System
-          </div>
+          <div style={{ fontSize: 11, color: '#9ca3af' }}>Generated by Stock Management System</div>
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: 11, color: '#9ca3af', marginBottom: 32 }}>Authorised Signature</div>
             <div style={{ borderTop: '1px solid #374151', paddingTop: 4, fontSize: 11, color: '#6b7280', width: 160 }}>Signature</div>

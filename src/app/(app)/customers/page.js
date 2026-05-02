@@ -69,6 +69,7 @@ export default function CustomersPage() {
                   <td>{r.filerStatus ? <span className="badge bg-slate-200 text-sky-700">{r.filerStatus}</span> : '—'}</td>
                   <td className="text-slate-600 text-xs max-w-[200px] truncate">{r.address || '—'}</td>
                   <td className="whitespace-nowrap">
+                    <button onClick={() => window.open(`/customers/${r.customerId}/print`, '_blank')} className="text-emerald-600 hover:text-emerald-500 text-xs mr-3 transition-colors">Print</button>
                     <button onClick={() => openEdit(r)} className="text-sky-600 hover:text-sky-700 text-xs mr-3 transition-colors">Edit</button>
                     <button onClick={() => setDelTarget(r)} className="text-danger/80 hover:text-danger text-xs transition-colors">Delete</button>
                   </td>
