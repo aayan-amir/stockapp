@@ -5,6 +5,7 @@ import Modal from '@/components/Modal'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import InvoicePrint from '@/components/InvoicePrint'
 import { fmtDate, today } from '@/lib/utils'
+import usePrintTrigger from '@/hooks/usePrintTrigger'
 
 const EMPTY_HEADER = { invoiceNo: '', gdNumber: '', txDate: today(), supplierName: '', notes: '' }
 const EMPTY_ITEM   = { stockId: '', quantity: '' }
@@ -33,17 +34,8 @@ export default function PurchasesPage() {
   useEffect(() => { load() }, [load])
   useEffect(() => { fetch('/api/stock').then(r => r.json()).then(setStocks) }, [])
 
-  useEffect(() => {
-    if (!printItem) return
-    const t = setTimeout(() => { window.print(); setPrintItem(null) }, 50)
-    return () => clearTimeout(t)
-  }, [printItem])
-
-  useEffect(() => {
-    if (!printList) return
-    const t = setTimeout(() => { window.print(); setPrintList(false) }, 50)
-    return () => clearTimeout(t)
-  }, [printList])
+  usePrintTrigger(printItem, setPrintItem, null)
+  usePrintTrigger(printList, setPrintList, false)
 
   const fh = k => ({ value: header[k] ?? '', onChange: e => setHeader(p => ({ ...p, [k]: e.target.value })), className: 'field-input' })
 
@@ -260,7 +252,7 @@ export default function PurchasesPage() {
       {printItem && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: '#fff', overflowY: 'auto' }}>
           <div className="print-area">
-            <InvoicePrint sale={printItem} />
+            <InvoicePrint transaction={{ ...printItem, transactionType: printItem.transactionType || 'Purchase' }} />
           </div>
         </div>
       )}

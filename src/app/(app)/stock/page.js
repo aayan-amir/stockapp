@@ -5,6 +5,7 @@ import Modal from '@/components/Modal'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import EmptyState from '@/components/EmptyState'
 import { fmtDate } from '@/lib/utils'
+import usePrintTrigger from '@/hooks/usePrintTrigger'
 
 const EMPTY = { typeId:'', ourNo:'', oemNo:'', name:'', stockType:'', description:'', supplier:'' }
 const SEARCH_FIELDS = [
@@ -40,11 +41,7 @@ export default function StockPage() {
     fetch('/api/categories').then(r => r.json()).then(setCategories)
   }, [])
 
-  useEffect(() => {
-    if (!printList) return
-    const t = setTimeout(() => { window.print(); setPrintList(false) }, 50)
-    return () => clearTimeout(t)
-  }, [printList])
+  usePrintTrigger(printList, setPrintList, false)
 
   function openNew()     { setEditing(null); setForm(EMPTY); setModal(true) }
   function openEdit(row) { setEditing(row); setForm({ typeId: row.typeId||'', ourNo: row.ourNo||'', oemNo: row.oemNo||'', name: row.name||'', stockType: row.stockType||'', description: row.description||'', supplier: row.supplier||'' }); setModal(true) }
