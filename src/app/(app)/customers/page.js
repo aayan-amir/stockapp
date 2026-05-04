@@ -16,6 +16,7 @@ export default function CustomersPage() {
   const [form,      setForm]     = useState(EMPTY)
   const [saving,    setSaving]   = useState(false)
   const [delTarget, setDelTarget]= useState(null)
+  const [printList, setPrintList] = useState(false)
 
   const load = useCallback(() => {
     setLoading(true)
@@ -24,6 +25,12 @@ export default function CustomersPage() {
   }, [q])
 
   useEffect(() => { load() }, [load])
+
+  useEffect(() => {
+    if (!printList) return
+    const t = setTimeout(() => { window.print(); setPrintList(false) }, 50)
+    return () => clearTimeout(t)
+  }, [printList])
 
   function openNew()     { setEditing(null); setForm(EMPTY); setModal(true) }
   function openEdit(row) { setEditing(row); setForm({ customerName: row.customerName, address: row.address||'', phoneNumber: row.phoneNumber||'', email: row.email||'', ntn: row.ntn||'', gstNumber: row.gstNumber||'', filerStatus: row.filerStatus||'', notes: row.notes||'' }); setModal(true) }
@@ -44,7 +51,7 @@ export default function CustomersPage() {
       <PageHeader
         title="Customers"
         subtitle={`${rows.length} customer(s)`}
-        actions={<div className="flex gap-2"><button onClick={() => { const p = q ? `?q=${encodeURIComponent(q)}` : ''; window.open(`/customers/print${p}`, '_blank') }} className="btn-ghost">🖨 Print List</button><button onClick={openNew} className="btn-gold">+ Add Customer</button></div>}
+        actions={<div className="flex gap-2"><button onClick={() => setPrintList(true)} className="btn-ghost">🖨 Print List</button><button onClick={openNew} className="btn-gold">+ Add Customer</button></div>}
       />
 
       <div className="flex gap-2 mb-5">
@@ -69,7 +76,6 @@ export default function CustomersPage() {
                   <td>{r.filerStatus ? <span className="badge bg-slate-200 text-sky-700">{r.filerStatus}</span> : '—'}</td>
                   <td className="text-slate-600 text-xs max-w-[200px] truncate">{r.address || '—'}</td>
                   <td className="whitespace-nowrap">
-                    <button onClick={() => window.open(`/customers/${r.customerId}/print`, '_blank')} className="text-emerald-600 hover:text-emerald-500 text-xs mr-3 transition-colors">Print</button>
                     <button onClick={() => openEdit(r)} className="text-sky-600 hover:text-sky-700 text-xs mr-3 transition-colors">Edit</button>
                     <button onClick={() => setDelTarget(r)} className="text-danger/80 hover:text-danger text-xs transition-colors">Delete</button>
                   </td>
@@ -111,6 +117,50 @@ export default function CustomersPage() {
         onConfirm={async () => { await fetch(`/api/customers/${delTarget.customerId}`, { method: 'DELETE' }); setDelTarget(null); load() }}
         danger title="Delete Customer" message={`Delete "${delTarget?.customerName}"? Past transactions will remain.`}
       />
+
+      {/* Customers list print */}
+      {printList && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: '#fff', overflowY: 'auto' }}>
+          <div className="print-area" style={{ fontFamily: "'Segoe UI', Arial, sans-serif", fontSize: 12, color: '#1a1a1a', padding: '32px 40px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+              <div>
+                <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: -0.5 }}>CUSTOMERS REPORT</div>
+                <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>Stock Management System</div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: 12, color: '#9ca3af' }}>{new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
+                <div style={{ fontSize: 13, color: '#7c3aed', fontWeight: 700, marginTop: 2 }}>{rows.length} customer(s)</div>
+              </div>
+            </div>
+            <div style={{ borderTop: '2px solid #7c3aed', marginBottom: 16 }} />
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ background: '#f8f5ff' }}>
+                  {['Name', 'Phone', 'NTN', 'GST No.', 'Filer', 'Address'].map(h => (
+                    <th key={h} style={{ textAlign: 'left', padding: '8px 10px', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: '#7c3aed', borderBottom: '2px solid #e5e7eb', whiteSpace: 'nowrap' }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r, idx) => (
+                  <tr key={r.customerId} style={{ borderBottom: '1px solid #f3f4f6', background: idx % 2 ? '#fafafa' : '#fff' }}>
+                    <td style={{ padding: '7px 10px', fontWeight: 600 }}>{r.customerName}</td>
+                    <td style={{ padding: '7px 10px', fontFamily: 'monospace', fontSize: 11 }}>{r.phoneNumber || '—'}</td>
+                    <td style={{ padding: '7px 10px', fontFamily: 'monospace', fontSize: 11 }}>{r.ntn || '—'}</td>
+                    <td style={{ padding: '7px 10px', fontFamily: 'monospace', fontSize: 11 }}>{r.gstNumber || '—'}</td>
+                    <td style={{ padding: '7px 10px', fontSize: 11 }}>{r.filerStatus || '—'}</td>
+                    <td style={{ padding: '7px 10px', fontSize: 11, maxWidth: 180 }}>{r.address || '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div style={{ borderTop: '1px solid #e5e7eb', marginTop: 20, paddingTop: 10, display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#9ca3af' }}>
+              <span>Generated by Stock Management System</span>
+              <span>{rows.length} customer(s)</span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

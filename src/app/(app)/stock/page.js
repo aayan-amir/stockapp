@@ -27,6 +27,7 @@ export default function StockPage() {
   const [saving,   setSaving]   = useState(false)
   const [delTarget,setDelTarget]= useState(null)
   const [categories, setCategories] = useState([])
+  const [printList, setPrintList] = useState(false)
 
   const load = useCallback(() => {
     setLoading(true)
@@ -38,6 +39,12 @@ export default function StockPage() {
   useEffect(() => {
     fetch('/api/categories').then(r => r.json()).then(setCategories)
   }, [])
+
+  useEffect(() => {
+    if (!printList) return
+    const t = setTimeout(() => { window.print(); setPrintList(false) }, 50)
+    return () => clearTimeout(t)
+  }, [printList])
 
   function openNew()     { setEditing(null); setForm(EMPTY); setModal(true) }
   function openEdit(row) { setEditing(row); setForm({ typeId: row.typeId||'', ourNo: row.ourNo||'', oemNo: row.oemNo||'', name: row.name||'', stockType: row.stockType||'', description: row.description||'', supplier: row.supplier||'' }); setModal(true) }
@@ -68,7 +75,7 @@ export default function StockPage() {
       <PageHeader
         title="Stock"
         subtitle={`${rows.length} item(s)`}
-        actions={<div className="flex gap-2"><button onClick={() => { const p = q ? `?q=${encodeURIComponent(q)}&field=${field}` : ''; window.open(`/stock/print${p}`, '_blank') }} className="btn-ghost">🖨 Print List</button><button onClick={openNew} className="btn-gold">+ New Item</button></div>}
+        actions={<div className="flex gap-2"><button onClick={() => setPrintList(true)} className="btn-ghost">🖨 Print List</button><button onClick={openNew} className="btn-gold">+ New Item</button></div>}
       />
 
       {/* Search bar */}
@@ -170,6 +177,56 @@ export default function StockPage() {
         title="Delete Stock Item"
         message={`Delete "${delTarget?.ourNo || delTarget?.description}"? This cannot be undone.`}
       />
+
+      {/* Stock list print */}
+      {printList && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: '#fff', overflowY: 'auto' }}>
+          <div className="print-area" style={{ fontFamily: "'Segoe UI', Arial, sans-serif", fontSize: 12, color: '#1a1a1a', padding: '32px 40px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+              <div>
+                <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: -0.5 }}>STOCK REPORT</div>
+                <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>Stock Management System</div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: 12, color: '#9ca3af' }}>{new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
+                <div style={{ fontSize: 13, color: '#7c3aed', fontWeight: 700, marginTop: 2 }}>{rows.length} item(s)</div>
+              </div>
+            </div>
+            <div style={{ borderTop: '2px solid #7c3aed', marginBottom: 16 }} />
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ background: '#f8f5ff' }}>
+                  {['Our No.', 'OEM No.', 'Name / Description', 'Category', 'Supplier', 'In', 'Out', 'Qty'].map((h, i) => (
+                    <th key={h} style={{ textAlign: i >= 5 ? 'right' : 'left', padding: '8px 10px', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: '#7c3aed', borderBottom: '2px solid #e5e7eb', whiteSpace: 'nowrap' }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r, idx) => (
+                  <tr key={r.stockId} style={{ borderBottom: '1px solid #f3f4f6', background: idx % 2 ? '#fafafa' : '#fff' }}>
+                    <td style={{ padding: '7px 10px', fontFamily: 'monospace', fontSize: 11, color: '#0369a1', fontWeight: 600 }}>{r.ourNo || '—'}</td>
+                    <td style={{ padding: '7px 10px', fontFamily: 'monospace', fontSize: 11, color: '#6b7280' }}>{r.oemNo || '—'}</td>
+                    <td style={{ padding: '7px 10px', maxWidth: 200 }}>
+                      {r.name && <div style={{ fontWeight: 500 }}>{r.name}</div>}
+                      {r.description && <div style={{ fontSize: 11, color: '#6b7280' }}>{r.description}</div>}
+                      {!r.name && !r.description && <span style={{ color: '#9ca3af' }}>—</span>}
+                    </td>
+                    <td style={{ padding: '7px 10px', fontSize: 11 }}>{r.stockType || '—'}</td>
+                    <td style={{ padding: '7px 10px', fontSize: 11, color: '#6b7280' }}>{r.supplier || '—'}</td>
+                    <td style={{ padding: '7px 10px', textAlign: 'right', fontFamily: 'monospace', fontSize: 11, color: '#059669' }}>{r.stockIn}</td>
+                    <td style={{ padding: '7px 10px', textAlign: 'right', fontFamily: 'monospace', fontSize: 11, color: '#dc2626' }}>{r.stockOut}</td>
+                    <td style={{ padding: '7px 10px', textAlign: 'right', fontFamily: 'monospace', fontWeight: 700, color: r.quantity <= 0 ? '#dc2626' : r.quantity <= 5 ? '#d97706' : '#059669' }}>{r.quantity}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div style={{ borderTop: '1px solid #e5e7eb', marginTop: 20, paddingTop: 10, display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#9ca3af' }}>
+              <span>Generated by Stock Management System</span>
+              <span>{rows.length} item(s)</span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
