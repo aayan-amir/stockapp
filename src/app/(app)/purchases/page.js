@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from 'react'
 import PageHeader from '@/components/PageHeader'
 import Modal from '@/components/Modal'
 import ConfirmDialog from '@/components/ConfirmDialog'
+import InvoicePrint from '@/components/InvoicePrint'
 import { fmtDate, today } from '@/lib/utils'
 
 const EMPTY_HEADER = { invoiceNo: '', gdNumber: '', txDate: today(), supplierName: '', notes: '' }
@@ -20,6 +21,8 @@ export default function PurchasesPage() {
   const [q,         setQ]         = useState('')
   const [editing,   setEditing]   = useState(null)
   const [delTarget, setDelTarget] = useState(null)
+  const [printItem, setPrintItem] = useState(null)
+  const [printList, setPrintList] = useState(false)
 
   const load = useCallback(() => {
     setLoading(true)
@@ -29,6 +32,18 @@ export default function PurchasesPage() {
 
   useEffect(() => { load() }, [load])
   useEffect(() => { fetch('/api/stock').then(r => r.json()).then(setStocks) }, [])
+
+  useEffect(() => {
+    if (!printItem) return
+    const t = setTimeout(() => { window.print(); setPrintItem(null) }, 50)
+    return () => clearTimeout(t)
+  }, [printItem])
+
+  useEffect(() => {
+    if (!printList) return
+    const t = setTimeout(() => { window.print(); setPrintList(false) }, 50)
+    return () => clearTimeout(t)
+  }, [printList])
 
   const fh = k => ({ value: header[k] ?? '', onChange: e => setHeader(p => ({ ...p, [k]: e.target.value })), className: 'field-input' })
 
@@ -121,7 +136,7 @@ export default function PurchasesPage() {
       <PageHeader
         title="Purchases"
         subtitle={`${rows.length} record(s)`}
-        actions={<div className="flex gap-2"><button onClick={() => { const p = q ? `?q=${encodeURIComponent(q)}` : ''; window.open(`/purchases/print${p}`, '_blank') }} className="btn-ghost">🖨 Print List</button><button onClick={openNew} className="btn-gold">+ Record Purchase</button></div>}
+        actions={<div className="flex gap-2"><button onClick={() => setPrintList(true)} className="btn-ghost">🖨 Print List</button><button onClick={openNew} className="btn-gold">+ Record Purchase</button></div>}
       />
 
       <div className="flex gap-2 mb-5">
@@ -153,7 +168,7 @@ export default function PurchasesPage() {
                     <td className="text-slate-600 text-xs">{r.supplierName || '—'}</td>
                     <td className="text-right font-mono text-xs text-slate-700">{totalQty}</td>
                     <td className="whitespace-nowrap">
-                      <button onClick={() => window.open(`/sales/${r.saleId}/print`, '_blank')} className="text-emerald-600 hover:text-emerald-500 text-xs mr-3 transition-colors">Print</button>
+                      <button onClick={() => setPrintItem(r)} className="text-emerald-600 hover:text-emerald-500 text-xs mr-3 transition-colors">Print</button>
                       <button onClick={() => openEdit(r)} className="text-sky-600 hover:text-sky-700 text-xs mr-3 transition-colors">Edit</button>
                       <button onClick={() => setDelTarget(r)} className="text-danger/80 hover:text-danger text-xs transition-colors">Delete</button>
                     </td>
@@ -240,6 +255,64 @@ export default function PurchasesPage() {
         title="Delete Purchase"
         message={`Delete purchase "${delTarget?.invoiceNo || ''}"? Stock will be reversed and the record deleted.`}
       />
+
+      {/* Individual purchase invoice print */}
+      {printItem && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: '#fff', overflowY: 'auto' }}>
+          <div className="print-area">
+            <InvoicePrint sale={printItem} />
+          </div>
+        </div>
+      )}
+
+      {/* Purchases list print */}
+      {printList && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: '#fff', overflowY: 'auto' }}>
+          <div className="print-area" style={{ fontFamily: "'Segoe UI', Arial, sans-serif", fontSize: 12, color: '#1a1a1a', padding: '32px 40px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+              <div>
+                <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: -0.5 }}>PURCHASES REPORT</div>
+                <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>Stock Management System</div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: 12, color: '#9ca3af' }}>{new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
+                <div style={{ fontSize: 13, color: '#0369a1', fontWeight: 700, marginTop: 2 }}>{rows.length} record(s)</div>
+              </div>
+            </div>
+            <div style={{ borderTop: '2px solid #0369a1', marginBottom: 16 }} />
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ background: '#f0f9ff' }}>
+                  {['Invoice', 'GD No.', 'Date', 'Supplier', 'Items', 'Qty'].map((h, i) => (
+                    <th key={h} style={{ textAlign: i === 5 ? 'right' : 'left', padding: '8px 10px', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: '#0369a1', borderBottom: '2px solid #e5e7eb', whiteSpace: 'nowrap' }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r, idx) => {
+                  const its = r.items?.length > 0 ? r.items : r.stock ? [{ stock: r.stock, quantity: r.quantity }] : []
+                  const names = its.map(it => it.stock?.name || it.stock?.description || it.stock?.ourNo || '?').join(', ')
+                  const qty   = its.reduce((s, it) => s + (it.quantity || 0), 0)
+                  return (
+                    <tr key={r.saleId} style={{ borderBottom: '1px solid #f3f4f6', background: idx % 2 ? '#fafafa' : '#fff' }}>
+                      <td style={{ padding: '7px 10px', fontFamily: 'monospace', fontSize: 11, color: '#0369a1', fontWeight: 600 }}>{r.invoiceNo || '—'}</td>
+                      <td style={{ padding: '7px 10px', fontFamily: 'monospace', fontSize: 11, color: '#6b7280' }}>{r.gdNumber || '—'}</td>
+                      <td style={{ padding: '7px 10px', fontSize: 11, color: '#6b7280', whiteSpace: 'nowrap' }}>{fmtDate(r.txDate)}</td>
+                      <td style={{ padding: '7px 10px', fontSize: 11 }}>{r.supplierName || '—'}</td>
+                      <td style={{ padding: '7px 10px', fontSize: 11, maxWidth: 220 }}>{names}</td>
+                      <td style={{ padding: '7px 10px', textAlign: 'right', fontFamily: 'monospace', fontWeight: 600 }}>{qty}</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+            <div style={{ borderTop: '1px solid #e5e7eb', marginTop: 20, paddingTop: 10, display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#9ca3af' }}>
+              <span>Generated by Stock Management System</span>
+              <span>{rows.length} record(s)</span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

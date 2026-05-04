@@ -44,3 +44,9 @@ body { background: #0f1115; color: #e2e8f0; font-family: 'DM Sans', sans-serif; 
   .stat-value { @apply text-2xl font-bold text-gold font-mono tabular-nums; }
   .stat-label { @apply text-slate-400 text-xs font-semibold uppercase tracking-widest mt-1; }
 }
+
+@media print {
+  body * { visibility: hidden; }
+  .print-area, .print-area * { visibility: visible; }
+  .print-area { position: absolute; top: 0; left: 0; width: 100%; padding: 0; }
+}
