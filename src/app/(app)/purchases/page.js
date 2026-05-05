@@ -260,7 +260,7 @@ export default function PurchasesPage() {
       {printItem && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: '#fff', overflowY: 'auto' }}>
           <div className="print-area">
-            <InvoicePrint sale={printItem} />
+            <InvoicePrint sale={{ ...printItem, transactionType: printItem.transactionType || 'Purchase' }} />
           </div>
         </div>
       )}

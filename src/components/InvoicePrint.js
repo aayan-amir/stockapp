@@ -1,3 +1,5 @@
+'use client'
+
 export default function InvoicePrint({ sale }) {
   const isPurchase  = sale.transactionType === 'Purchase'
   const docTitle    = isPurchase ? 'PURCHASE ORDER' : 'INVOICE'
