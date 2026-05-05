@@ -1,14 +1,16 @@
-export default function InvoicePrint({ transaction }) {
-  const isPurchase  = transaction.transactionType === 'Purchase'
+'use client'
+
+export default function InvoicePrint({ sale }) {
+  const isPurchase  = sale.transactionType === 'Purchase'
   const docTitle    = isPurchase ? 'PURCHASE ORDER' : 'INVOICE'
   const accent      = isPurchase ? '#0369a1' : '#7c3aed'
   const bg          = isPurchase ? '#f0f9ff' : '#f8f5ff'
-  const lineItems   = transaction.items?.length > 0 ? transaction.items : transaction.stock ? [{ stock: transaction.stock, quantity: transaction.quantity }] : []
+  const lineItems   = sale.items?.length > 0 ? sale.items : sale.stock ? [{ stock: sale.stock, quantity: sale.quantity }] : []
   const totalQty    = lineItems.reduce((s, it) => s + (it.quantity || 0), 0)
-  const dateStr     = transaction.txDate
-    ? new Date(transaction.txDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })
+  const dateStr     = sale.txDate
+    ? new Date(sale.txDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })
     : '—'
-  const c = transaction.customer
+  const c = sale.customer
 
   return (
     <div style={{ fontFamily: "'Segoe UI', Arial, sans-serif", fontSize: 13, color: '#1a1a1a', padding: '40px 48px' }}>
@@ -20,7 +22,7 @@ export default function InvoicePrint({ transaction }) {
           <div style={{ fontSize: 13, color: '#6b7280', marginTop: 4 }}>Stock Management System</div>
         </div>
         <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: 18, fontWeight: 700, color: accent, fontFamily: 'monospace' }}>{transaction.invoiceNo || '—'}</div>
+          <div style={{ fontSize: 18, fontWeight: 700, color: accent, fontFamily: 'monospace' }}>{sale.invoiceNo || '—'}</div>
           <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>{dateStr}</div>
         </div>
       </div>
@@ -34,8 +36,8 @@ export default function InvoicePrint({ transaction }) {
             {isPurchase ? 'Supplier' : 'Bill To'}
           </div>
           {isPurchase ? (
-            transaction.supplierName
-              ? <div style={{ fontWeight: 700, fontSize: 15 }}>{transaction.supplierName}</div>
+            sale.supplierName
+              ? <div style={{ fontWeight: 700, fontSize: 15 }}>{sale.supplierName}</div>
               : <div style={{ color: '#6b7280', fontStyle: 'italic' }}>No supplier recorded</div>
           ) : c ? (
             <>
@@ -56,16 +58,16 @@ export default function InvoicePrint({ transaction }) {
             <tbody>
               <tr>
                 <td style={{ color: '#6b7280', paddingRight: 12, paddingBottom: 4 }}>{isPurchase ? 'PO No.' : 'Invoice No.'}</td>
-                <td style={{ fontWeight: 600, fontFamily: 'monospace' }}>{transaction.invoiceNo || '—'}</td>
+                <td style={{ fontWeight: 600, fontFamily: 'monospace' }}>{sale.invoiceNo || '—'}</td>
               </tr>
               <tr>
                 <td style={{ color: '#6b7280', paddingRight: 12, paddingBottom: 4 }}>Date</td>
                 <td>{dateStr}</td>
               </tr>
-              {isPurchase && transaction.gdNumber && (
+              {isPurchase && sale.gdNumber && (
                 <tr>
                   <td style={{ color: '#6b7280', paddingRight: 12, paddingBottom: 4 }}>GD Number</td>
-                  <td style={{ fontFamily: 'monospace' }}>{transaction.gdNumber}</td>
+                  <td style={{ fontFamily: 'monospace' }}>{sale.gdNumber}</td>
                 </tr>
               )}
               {!isPurchase && c?.filerStatus && (
@@ -109,10 +111,10 @@ export default function InvoicePrint({ transaction }) {
         </tfoot>
       </table>
 
-      {transaction.notes && (
+      {sale.notes && (
         <div style={{ background: '#fafafa', border: '1px solid #e5e7eb', borderRadius: 8, padding: '12px 16px', marginBottom: 24 }}>
           <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1.5, textTransform: 'uppercase', color: '#9ca3af', marginBottom: 4 }}>Notes</div>
-          <div style={{ color: '#4b5563' }}>{transaction.notes}</div>
+          <div style={{ color: '#4b5563' }}>{sale.notes}</div>
         </div>
       )}
 
