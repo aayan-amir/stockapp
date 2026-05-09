@@ -123,7 +123,13 @@ export default function LedgerPage() {
                 <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: -0.5 }}>TRANSACTIONS REPORT</div>
                 <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>Stock Management System</div>
                 <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 4 }}>
-                  Type: {type} {from ? `· From: ${from}` : ''} {to ? `· To: ${to}` : ''} {q ? `· Search: ${q}` : ''}
+                  {(() => {
+                    const parts = [`Type: ${type}`]
+                    if (from) parts.push(`From: ${from}`)
+                    if (to) parts.push(`To: ${to}`)
+                    if (q) parts.push(`Search: ${q}`)
+                    return parts.join(' · ')
+                  })()}
                 </div>
               </div>
               <div style={{ textAlign: 'right' }}>
