@@ -15,18 +15,23 @@ export default async function PrintStockPage({ searchParams }) {
   const sp    = await searchParams
   const q     = sp?.q     || ''
   const field = sp?.field || ''
+  const stockType = sp?.stockType || ''
 
-  const where = q && field && ALLOWED_FIELDS.includes(field)
+  const textWhere = q && field && ALLOWED_FIELDS.includes(field)
     ? { [field]: { contains: q } }
     : q
-    ? {
-        OR: [
-          { ourNo:       { contains: q } },
-          { name:        { contains: q } },
-          { description: { contains: q } },
-        ],
-      }
-    : {}
+      ? {
+          OR: [
+            { ourNo:       { contains: q } },
+            { name:        { contains: q } },
+            { description: { contains: q } },
+          ],
+        }
+      : {}
+  const where = {
+    ...textWhere,
+    ...(stockType ? { stockType } : {}),
+  }
 
   const stocks = await prisma.stock.findMany({
     where,
@@ -63,7 +68,13 @@ export default async function PrintStockPage({ searchParams }) {
           <div>
             <div style={{ fontSize: 26, fontWeight: 800, color: '#1a1a1a', letterSpacing: -0.5 }}>STOCK REPORT</div>
             <div style={{ fontSize: 13, color: '#6b7280', marginTop: 4 }}>Stock Management System</div>
-            {q && <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 2 }}>Filter: {q}{field ? ` (${field})` : ''}</div>}
+            {(q || stockType) && (
+              <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 2 }}>
+                {q ? `Search: ${q}${field ? ` (${field})` : ''}` : ''}
+                {q && stockType ? ' · ' : ''}
+                {stockType ? `Type: ${stockType}` : ''}
+              </div>
+            )}
           </div>
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: 12, color: '#9ca3af' }}>{printDate}</div>

@@ -19,6 +19,8 @@ export default function PurchasesPage() {
   const [error,     setError]     = useState('')
   const [stocks,    setStocks]    = useState([])
   const [q,         setQ]         = useState('')
+  const [from,      setFrom]      = useState('')
+  const [to,        setTo]        = useState('')
   const [editing,   setEditing]   = useState(null)
   const [delTarget, setDelTarget] = useState(null)
   const [printItem, setPrintItem] = useState(null)
@@ -26,9 +28,13 @@ export default function PurchasesPage() {
 
   const load = useCallback(() => {
     setLoading(true)
-    const p = q ? `?q=${encodeURIComponent(q)}` : ''
-    fetch(`/api/purchases${p}`).then(r => r.json()).then(d => { setRows(d); setLoading(false) })
-  }, [q])
+    const params = new URLSearchParams()
+    if (q) params.set('q', q)
+    if (from) params.set('from', from)
+    if (to) params.set('to', to)
+    const p = params.toString()
+    fetch(`/api/purchases${p ? `?${p}` : ''}`).then(r => r.json()).then(d => { setRows(d); setLoading(false) })
+  }, [q, from, to])
 
   useEffect(() => { load() }, [load])
   useEffect(() => { fetch('/api/stock').then(r => r.json()).then(setStocks) }, [])
@@ -140,9 +146,11 @@ export default function PurchasesPage() {
       />
 
       <div className="flex gap-2 mb-5">
+        <input type="date" value={from} onChange={e => setFrom(e.target.value)} className="field-input w-40" />
+        <input type="date" value={to} onChange={e => setTo(e.target.value)} className="field-input w-40" />
         <input value={q} onChange={e => setQ(e.target.value)} onKeyDown={e => e.key === 'Enter' && load()} placeholder="Search invoice, GD No, supplier, product…" className="field-input flex-1" />
         <button onClick={load} className="btn-ghost">Search</button>
-        <button onClick={() => setQ('')} className="btn-ghost text-slate-600">Clear</button>
+        <button onClick={() => { setQ(''); setFrom(''); setTo('') }} className="btn-ghost text-slate-600">Clear</button>
       </div>
 
       <div className="card overflow-hidden">

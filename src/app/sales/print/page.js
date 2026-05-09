@@ -13,14 +13,29 @@ export default async function PrintSalesPage({ searchParams }) {
 
   const sp = await searchParams
   const q  = sp?.q || ''
+  const from = sp?.from || ''
+  const to = sp?.to || ''
+  const txDate = {}
+  if (from) {
+    const d = new Date(from)
+    if (!Number.isNaN(d.getTime())) txDate.gte = d
+  }
+  if (to) {
+    const d = new Date(`${to}T23:59:59.999`)
+    if (!Number.isNaN(d.getTime())) txDate.lte = d
+  }
 
-  const where = q
-    ? { OR: [
+  const where = {
+    transactionType: 'Sale',
+    ...(q ? {
+      OR: [
         { invoiceNo:  { contains: q } },
         { customer:   { customerName: { contains: q } } },
         { items: { some: { stock: { OR: [{ ourNo: { contains: q } }, { name: { contains: q } }, { description: { contains: q } }] } } } },
-      ], transactionType: 'Sale' }
-    : { transactionType: 'Sale' }
+      ],
+    } : {}),
+    ...(Object.keys(txDate).length ? { txDate } : {}),
+  }
 
   const sales = await prisma.sale.findMany({
     where,
@@ -65,7 +80,13 @@ export default async function PrintSalesPage({ searchParams }) {
           <div>
             <div style={{ fontSize: 26, fontWeight: 800, color: '#1a1a1a', letterSpacing: -0.5 }}>SALES REPORT</div>
             <div style={{ fontSize: 13, color: '#6b7280', marginTop: 4 }}>Stock Management System</div>
-            {q && <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 2 }}>Filter: {q}</div>}
+            {(q || from || to) && (
+              <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 2 }}>
+                {q ? `Search: ${q}` : ''}
+                {q && (from || to) ? ' · ' : ''}
+                {from || to ? `Date: ${from || 'Any'} to ${to || 'Any'}` : ''}
+              </div>
+            )}
           </div>
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: 12, color: '#9ca3af' }}>{printDate}</div>
