@@ -21,6 +21,7 @@ export default function StockPage() {
   const [loading,  setLoading]  = useState(true)
   const [q,        setQ]        = useState('')
   const [field,    setField]    = useState('ourNo')
+  const [stockTypeFilter, setStockTypeFilter] = useState('')
   const [modal,    setModal]    = useState(false)
   const [editing,  setEditing]  = useState(null)   // null = new
   const [form,     setForm]     = useState(EMPTY)
@@ -31,9 +32,13 @@ export default function StockPage() {
 
   const load = useCallback(() => {
     setLoading(true)
-    const params = q ? `?q=${encodeURIComponent(q)}&field=${field}` : ''
-    fetch(`/api/stock${params}`).then(r => r.json()).then(d => { setRows(d); setLoading(false) })
-  }, [q, field])
+    const params = new URLSearchParams()
+    if (q) params.set('q', q)
+    if (q) params.set('field', field)
+    if (stockTypeFilter) params.set('stockType', stockTypeFilter)
+    const query = params.toString()
+    fetch(`/api/stock${query ? `?${query}` : ''}`).then(r => r.json()).then(d => { setRows(d); setLoading(false) })
+  }, [q, field, stockTypeFilter])
 
   useEffect(() => { load() }, [load])
   useEffect(() => {
@@ -83,13 +88,17 @@ export default function StockPage() {
         <select value={field} onChange={e => setField(e.target.value)} className="field-input w-36">
           {SEARCH_FIELDS.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
         </select>
+        <select value={stockTypeFilter} onChange={e => setStockTypeFilter(e.target.value)} className="field-input w-44">
+          <option value="">All Types</option>
+          {categories.map(c => <option key={c.typeId} value={c.typeName}>{c.typeName}</option>)}
+        </select>
         <input
           value={q} onChange={e => setQ(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && load()}
           placeholder="Search…" className="field-input flex-1"
         />
         <button onClick={load}        className="btn-ghost">Search</button>
-        <button onClick={() => { setQ(''); }} className="btn-ghost text-slate-600">Clear</button>
+        <button onClick={() => { setQ(''); setStockTypeFilter('') }} className="btn-ghost text-slate-600">Clear</button>
       </div>
 
       {/* Table */}

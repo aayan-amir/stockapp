@@ -5,15 +5,31 @@ import { NextResponse } from 'next/server'
 export async function GET(req) {
   const { searchParams } = new URL(req.url)
   const q = searchParams.get('q') || ''
-  const where = q
-    ? { OR: [
+  const from = searchParams.get('from') || ''
+  const to = searchParams.get('to') || ''
+  const txDate = {}
+  if (from) {
+    const d = new Date(from)
+    if (!Number.isNaN(d.getTime())) txDate.gte = d
+  }
+  if (to) {
+    const d = new Date(`${to}T23:59:59.999`)
+    if (!Number.isNaN(d.getTime())) txDate.lte = d
+  }
+
+  const where = {
+    transactionType: 'Purchase',
+    ...(q ? {
+      OR: [
         { invoiceNo:    { contains: q } },
         { gdNumber:     { contains: q } },
         { supplierName: { contains: q } },
         { stock: { OR: [{ ourNo: { contains: q } }, { description: { contains: q } }] } },
         { items: { some: { stock: { OR: [{ ourNo: { contains: q } }, { name: { contains: q } }, { description: { contains: q } }] } } } },
-      ], transactionType: 'Purchase' }
-    : { transactionType: 'Purchase' }
+      ],
+    } : {}),
+    ...(Object.keys(txDate).length ? { txDate } : {}),
+  }
 
   const rows = await prisma.sale.findMany({
     where, orderBy: { txDate: 'desc' },
